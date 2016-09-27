@@ -50,6 +50,8 @@ RUN apt-get update && \
   r-base-dev \
   r-cran-xml \
   libxml2-dev \
+  python-pip \
+  texlive \
   default-jre \ 
   default-jdk && \
   apt-get clean && \
@@ -127,13 +129,53 @@ RUN Rscript -e 'source("http://bioconductor.org/biocLite.R")' \
   -e 'biocLite("GenomicRanges")'
 RUN Rscript  -e 'install.packages("plyr")'
 RUN Rscript -e "install.packages('optparse')"
+RUN Rscript  -e 'install.packages("dplyr")'
+RUN Rscript  -e 'install.packages("magrittr")'
+RUN Rscript  -e 'install.packages("knitr")'
 
-# adding contamination check script and panel
-#RUN mkdir -p /home/cont
-#ADD cont.R /home/cont/
-#ADD contPanel.csv /home/cont/
+# install CNVkit
+RUN pip install --upgrade pip && pip install cnvkit
 
-ENV PATH=$PATH:/opt/software:/opt/software/varscan:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3
+# add cnvkit filtering script
+ADD cnvkit_filter.R /home/
+
+# install VarDict
+RUN  cd /opt/software/ && \
+  git clone --recursive https://github.com/AstraZeneca-NGS/VarDictJava.git && \
+  cd VarDictJava/ && \
+  ./gradlew clean installApp
+
+# install FastQC-0.11.5
+RUN  cd /opt/software/ && \
+  wget http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip && \
+  unzip fastqc_v0.11.5.zip && \
+  cd /opt/software/FastQC/ && \
+  chmod 755 fastqc  && \ 
+  rm /opt/software/fastqc_v0.11.5.zip
+
+# install Qualimap-2.2
+RUN  cd /opt/software/ && \
+  wget https://bitbucket.org/kokonech/qualimap/downloads/qualimap_v2.2.zip && \
+  unzip qualimap_v2.2.zip && \
+  cd /opt/software/qualimap_v2.2/scripts/ && \
+  Rscript installDependencies.r && \
+  rm /opt/software/qualimap_v2.2.zip
+
+# install BBMap-36.32
+RUN cd /opt/software/ && \
+  wget https://sourceforge.net/projects/bbmap/files/BBMap_36.32.tar.gz && \
+  tar -xvzf BBMap_36.32.tar.gz && \
+  rm /opt/software/BBMap_36.32.tar.gz
+
+# add contamination check script and panel
+ADD cont.R /home/
+ADD contPanel.csv /home/
+
+# add script to generate patient report
+ADD arep.R /home/
+ADD patientReport.Rnw /home/
+
+ENV PATH=$PATH:/opt/software:/opt/software/varscan:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDictJava/build/install/VarDict/bin/:/opt/software/VarDictJava:/opt/software/FastQC:/opt/software/qualimap_v2.2
 
 
 ##################### INSTALLATION END ##########################

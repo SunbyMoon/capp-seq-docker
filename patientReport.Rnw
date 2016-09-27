@@ -1,0 +1,223 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Patient Report
+%
+% Original author:
+% Tobias Meissner
+%
+% License:
+% MIT
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%  Data Input
+%----------------------------------------------------------------------------------------
+
+<<r init, echo=FALSE>>=
+library(knitr)
+library(xtable)
+
+
+sanitizeLatexS <- function(str) {
+    gsub('([#$%&~_\\^\\\\{}])', '\\\\\\\\\\1', str, perl = TRUE);
+}
+@
+
+<<dataIn, echo=FALSE>>=
+
+@
+
+% ---------------------------------------------------------------------------------------
+% Sample Information
+% ---------------------------------------------------------------------------------------
+
+<<sampleinfo, echo=FALSE>>=
+
+@
+
+%----------------------------------------------------------------------------------------
+%  DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[11pt, stdletter, dateno]{newlfm}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{wallpaper}
+\usepackage{array}
+\usepackage{arydshln}
+
+%% styling
+\newcolumntype{x}[1]{>{\centering\arraybackslash\hspace{0pt}}p{#1}} % centered with column 
+\newlfmP{noheadline,noHeadline}
+%\leftmarginsize{0in}
+%\rightmarginsize{0in}
+%\topmarginsize{2mm}
+%\topmarginskip{0in}
+%\headermarginsize{0cm}
+%\headermarginskip{0in}
+
+%% header
+\unprtop{0.65cm}
+\Rheader{\parbox{\textwith}{\small{\begin{tabbing} \textbf{Patient Name} \hspace*{1.25cm} \= \textbf{Report Date} \hspace*{0.75cm} \= \textbf{Tumor Type} \\ \Sexpr{sample$patient$name}, \Sexpr{sample$patient$surname} \> \today \> \Sexpr{sample$patient$tumor_type} \end{tabbing}}}}
+%% footer
+\unprbottom{2cm}
+\Lfooter{\scriptsize{Results were reviewed and approved by \Sexpr{sample$medical_director$surname} \Sexpr{sample$medical_director$name} \Sexpr{sample$medical_director$title} \\ CLIA: \Sexpr{sample$lab$clia_number} | CAP: \Sexpr{sample$lab$cap_number} | California: \Sexpr{sample$lab$cal_number} \\ \Sexpr{sample$lab$name}, \Sexpr{sample$lab$street}, \Sexpr{sample$lab$city}, \Sexpr{sample$lab$state}, \Sexpr{sample$lab$zip}, \Sexpr{sample$lab$country} | \url{\Sexpr{sample$lab$web}}  \hfill page \thepage}} 
+\lfooter{\scriptsize{Results were reviewed and approved by \Sexpr{sample$medical_director$surname} \Sexpr{sample$medical_director$name} \Sexpr{sample$medical_director$title} \\ CLIA: \Sexpr{sample$lab$clia_number} | CAP: \Sexpr{sample$lab$cap_number} | California: \Sexpr{sample$lab$cal_number} \\ \Sexpr{sample$lab$name}, \Sexpr{sample$lab$street}, \Sexpr{sample$lab$city}, \Sexpr{sample$lab$state}, \Sexpr{sample$lab$zip}, \Sexpr{sample$lab$country} | \url{\Sexpr{sample$lab$web}}  \hfill page \thepage}} 
+
+%% add section support 
+\newcounter{section}
+\newcounter{subsection}[section]
+\newcounter{subsubsection}[section]
+\setcounter{secnumdepth}{4}
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+                                   {-3.5ex \@plus -1ex \@minus -.2ex}%
+                                   {2.3ex \@plus.2ex}%
+                                   {\normalfont\normalsize\bfseries}}
+\newcommand\subsection{\@startsection{subsection}{2}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+                                     {-3ex\@plus -1ex \@minus -.2ex}%
+                                     {0.7ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}                                     
+\renewcommand\thesection{\@arabic\c@section}
+\renewcommand\thesubsection{\thesection.\@arabic\c@subsection}
+\renewcommand\thesubsubsection{\thesubsubsection.\@arabic\c@subsubsection}
+\makeatother
+
+%----------------------------------------------------------------------------------------
+%  ADDRESSEE SECTION
+%----------------------------------------------------------------------------------------
+%\nameto{\Sexpr{sample$physician_addr$surname} \Sexpr{sample$physician_addr$name}} 
+%\addrto{\parbox{3in}{\Sexpr{sample$physician_addr$street} \\ \Sexpr{sample$physician_addr$city}, \Sexpr{sample$physician_addr$state}, \Sexpr{sample$physician_addr$zip}}}
+                   
+%----------------------------------------------------------------------------------------
+%  YOUR NAME & ADDRESS SECTION
+%----------------------------------------------------------------------------------------                     
+%% addres send from
+%\namefrom{Sherlock Holmes} 
+%\addrfrom{\parbox{2in}{221B Baker Street \\ London, UK}}
+
+%\greetto{}
+
+%----------------------------------------------------------------------------------------
+%  Start Document
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+%\SweaveOpts{concordance=TRUE}
+
+\begin{newlfm}
+
+%\ThisCenterWallPaper{1}{avera_letter.pdf}
+\CenterWallPaper{1}{../pdf/avera_letter.pdf}
+
+%----------------------------------------------------------------------------------------
+%	Content
+%----------------------------------------------------------------------------------------
+
+\vspace*{-4.25cm}
+\textbf{Report for Sample \Sexpr{sanitizeLatexS(sample$patID)}}
+
+\vspace*{-0.5cm}
+\line(1,0){475} 
+
+%% SAMPLE INFORMATION
+
+\vspace{-0.3cm}
+\begin{scriptsize}
+\begin{tabbing}
+\textbf{Date of birth:} \= \Sexpr{sample$patient$date_of_birth} \hspace{0.7cm}  \= \textbf{Medical Facility:} \hspace{0.4cm} \= \Sexpr{sample$physician$facility} \hspace{0.4cm} \= \textbf{Specimen Received:} \= \Sexpr{sample$sample_details$received} \\ 
+\textbf{Gender:} \>\Sexpr{sample$patient$sex} \> \textbf{Ordering Physician:} \> \Sexpr{sample$physician$name}, \Sexpr{sample$physician$surname} \> \textbf{Specimen Site:} \> \Sexpr{sample$patient$tumor_site} \\
+\textbf{Specimen ID:} \>\Sexpr{sample$patient$specimen_id} \> \textbf{Medical Facility ID:} \> \Sexpr{sample$physician$facility_id} \> \textbf{Date of Collection:} \> \Sexpr{sample$sample_details$biopsy_date} \\
+\> \> \textbf{Pathologist:} \> \Sexpr{sample$pathologist$name}, \Sexpr{sample$pathologist$surname} \> \textbf{Specimen Type:} \> \Sexpr{sample$patient$specimen_type}
+\end{tabbing}
+\end{scriptsize}
+\vspace{-0.6cm}
+\line(1,0){475}
+
+%% Foundation Medicine
+
+\section*{Somatic Variant Results}
+
+<<format,echo=FALSE>>=
+tt <- data.frame(Gene=tab$Gene,
+                 Position=tab$Variant,
+                 Consequence=tab$Amino.Acid,
+                 #ZYGOSITY=tab$Genotype,
+                 #FREQ=tab$FREQ,
+                 #INTERP=NA,
+                 stringsAsFactors = F
+                 )
+tt$Position <- gsub('>', '\\\\textgreater ', tt$Position)
+tt$Position <- gsub('_', '\\\\_', tt$Position)
+tt$Consequence <- gsub(',', ' ', tt$Consequence)
+
+@
+
+%\subsection*{SNVs}
+
+<<fmSNV, echo=FALSE, results='asis'>>=
+  Rtab <- xtable(tt, align=c("l","p{2cm}","p{6cm}","p{4cm}"))
+
+  addtorow <- list(pos = list(2:nrow(tt)-1), command = "\\hdashline \n")
+
+  print(Rtab, 
+        include.rownames=FALSE,
+        type='latex', 
+        table.placement="h!", 
+        sanitize.text.function = function(x) x,
+        caption.placement='bottom',
+        add.to.row = addtorow,
+        tabular.environment = 'longtable',
+        floating = F
+        )
+@
+
+\section*{Methodology}
+
+DNA was isolated from FFPE tissue using [...], quantified by [...]. Estimation of tumor content is based on [...] and analysis of the sequencing data using SciClone Version [...].  Next Generation Sequencing was performed using Illumina NextSeq 500 (2x150bp). A total of [... genes/mutations] were analyzed at an average coverge of [...]. Reads were aligned to [..hg19..] reference using [.. Basespace App TST...]. [...] and processed accordingly to [...] Test for Cancer - pipeline version [...].
+
+\section*{Limitations of the assay}
+
+1. The analytical sensitivity of the assay is approximately [...\%] (with a minimum neoplastic content of [...]\%), thus, mutations present in a lower percentage of cells may not be identified by this assay. Use of insufficient DNA template can result in low PCR product yields, and sequence signals may fall below detection limits.
+
+2. The human exome is not captured in its entirety, because not all human genes are identified and some genes may not be amendable to capture. Pathogenic mutations located in genes that are non-coding, have corresponding pseudogenes, contain repetitive or high GC-region will not be detected. Information about low coverage regions by this test is provided on our website at [...]
+
+3. Medium to large indels above 30\% of the read length (\textgreater 60bp) may not be detected due to the short Illumina reads.
+
+4. Any actionable sequence variant detected by this test (or lack of thereof) requires confirmation by an independent testing method before altering clinical management based on the findings.
+
+6. Some regions of genes cannot be fully evaluated for mutations or indels because of lack of sufficient coverage. 
+
+\section*{Disclaimer}
+The results of this test should be used in conjunction with other clinical findings for clinical management decisions. This method has not been cleared by the FDA. The lack of a given genetic alteration in this report does not necessarily indicate the absence of the alteration in the tumor since technical aspects of the assay, including inadequate coverage of some genes, limit the data that can be acquired in some genetic regions. The use of [...] is intended for patients with [...].
+
+\section*{LDT Statement}
+Test Performed at: Avera Genomics Lab  11099 Torrey Pines Science Park | San Diego, CA 92037 | USA | www.AveraHealth.com.  CLIA # 05DXXXXX--CAP XXXXXX-- California CLFXXXXXX
+This is a laboratory developed test (LDT). It has not been cleared or approved by the FDA. The FDA has determined that such clearance or approval is not necessary. This test is used for clinical purposes. It should not be regarded as investigational or for research use. 
+
+\section*{References}
+
+[...]
+
+\section*{Appendix}
+
+List of Genes / Mutations [...]:
+
+%\section*{Session Info}
+%
+%<<sessioninfo, echo=FALSE>>=
+%sessionInfo()
+%@
+
+%----------------------------------------------------------------------------------------
+
+\end{newlfm}
+
+\end{document}
