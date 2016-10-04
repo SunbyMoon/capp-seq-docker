@@ -15,6 +15,7 @@ echo "aln_dir="$out"/alignment" >> $envlist
 echo "var_dir="$out"/vcf" >> $envlist 
 echo "cnv_dir="$out"/cnv" >> $envlist
 echo "qm_dir="$out"/qualimap" >> $envlist
+echo "fastqc_dir="$out"/fastqc" >> $envlist
 echo -e "\n" >> $envlist 
 
 echo "sample="${tsample%%-*} >> $envlist
@@ -73,6 +74,7 @@ mkdir -p $out/alignment
 mkdir -p $out/vcf
 mkdir -p $out/cnv
 mkdir -p $out/qualimap
+mkdir -p $out/fastqc
 
 #sed -e 's|'/home/anu/capp-seq-docker/test.env.list'|'$envlist'|g' panceq.sh
 #bash panceq.sh

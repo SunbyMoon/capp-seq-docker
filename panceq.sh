@@ -97,6 +97,8 @@ echo -e "\e[0;36mRunning Qualimap on normal bam \e[0m"
 #docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-analysis/test.list anu9109/capp-seq bash -c ' qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff $regions -bam $goutbam -outdir $qm_dir --outfile $gqmout'
 
 # Run FastQC
+echo -e "\e[0;36mRunning FastQC \e[0m"
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/test.list anu9109/capp-seq bash -c 'fastqc -o $fastqc_dir $tfastq1 $tfastq2 $gfastq1 $gfastq2 -t $cpu'
 
 
 echo -e "\e[0;36mDone! \e[0m"

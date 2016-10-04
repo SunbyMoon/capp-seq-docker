@@ -5,6 +5,7 @@ aln_dir=/data/storage/capp-seq/docker_out/alignment
 var_dir=/data/storage/capp-seq/docker_out/vcf
 cnv_dir=/data/storage/capp-seq/docker_out/cnv
 qm_dir=/data/storage/capp-seq/docker_out/qualimap
+fastqc_dir=/data/storage/capp-seq/docker_out/fastqc
 
 sample=CCD333
 cpu=8
