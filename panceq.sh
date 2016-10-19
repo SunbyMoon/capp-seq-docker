@@ -14,13 +14,13 @@ docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/c
 
 # Alignment
 echo -e "\e[0;36mCreating tumor BAM\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /dev:/dev -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bwa mem -M -t $cpu -R $tRGR $bwa_index  $tinfastq1 $tinfastq2 | \
+docker run -v /data:/data -v /tmp:/tmp -v /dev:/dev -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bwa mem -M -t $cpu -R $tRGR $bwa_index  $tfastq1 $tfastq2 | \
 samblaster --splitterFile >(samtools view -S -u /dev/stdin | sambamba sort -t $cpu -m 10G --tmpdir $temp_dir -o $ttmpsortbam /dev/stdin) \
 --discordantFile >(samtools view -S -u /dev/stdin | sambamba sort -t $cpu -m 10G --tmpdir $temp_dir -o $ttmpsortbam /dev/stdin) | \
 samtools view -S -u /dev/stdin | \
 sambamba sort -t $cpu -m 10G --tmpdir $temp_dir -o $ttmpsortbam /dev/stdin'
 echo -e "\e[0;36mCreating normal BAM\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /dev:/dev -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bwa mem -M -t $cpu -R $gRGR $bwa_index  $ginfastq1 $ginfastq2 | \
+docker run -v /data:/data -v /tmp:/tmp -v /dev:/dev -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bwa mem -M -t $cpu -R $gRGR $bwa_index  $gfastq1 $gfastq2 | \
 samblaster --splitterFile >(samtools view -S -u /dev/stdin | sambamba sort -t $cpu -m 10G --tmpdir $temp_dir -o $gtmpsortbam /dev/stdin) \
 --discordantFile >(samtools view -S -u /dev/stdin | sambamba sort -t $cpu -m 10G --tmpdir $temp_dir -o $gtmpsortbam /dev/stdin) | \
 samtools view -S -u /dev/stdin | \
@@ -92,6 +92,10 @@ echo -e "\e[0;36mCreating compressed VCF\e[0m"
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 > $outvardict'
+
+# Annotate VarDict VCF
+echo -e "\e[0;36mAnnotating variants with Annovar\e[0m"
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl /home/table_annovar.pl $outvardict $annodb -buildver hg19 -out $annovarout -protocol knownGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
 
 # Run contanimation check script
 echo -e "\e[0;36mRunning contamination check \e[0m"

@@ -175,7 +175,10 @@ ADD contPanel.csv /home/
 ADD arep.R /home/
 ADD patientReport.Rnw /home/
 
-ENV PATH=$PATH:/opt/software:/opt/software/varscan:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDictJava/build/install/VarDict/bin/:/opt/software/VarDictJava:/opt/software/FastQC:/opt/software/qualimap_v2.2
+# install ANNOVAR
+ADD table_annovar.pl /home/
+
+ENV PATH=$PATH:/opt/software:/opt/software/varscan:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDictJava/build/install/VarDict/bin/:/opt/software/VarDictJava:/opt/software/FastQC:/opt/software/qualimap_v2.2:/home
 
 
 ##################### INSTALLATION END ##########################
