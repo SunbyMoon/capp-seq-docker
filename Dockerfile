@@ -51,7 +51,7 @@ RUN apt-get update && \
   r-cran-xml \
   libxml2-dev \
   python-pip \
-  texlive \
+  texlive-full \
   default-jre \ 
   default-jdk && \
   apt-get clean && \

@@ -115,7 +115,7 @@ sanitizeLatexS <- function(str) {
 \begin{newlfm}
 
 %\ThisCenterWallPaper{1}{avera_letter.pdf}
-\CenterWallPaper{1}{../pdf/avera_letter.pdf}
+\CenterWallPaper{1}{/home/anu/capp-seq-docker/avera_letter.pdf}
 
 %----------------------------------------------------------------------------------------
 %	Content
@@ -143,29 +143,63 @@ sanitizeLatexS <- function(str) {
 
 %% Foundation Medicine
 
-\section*{Somatic Variant Results}
+\section*{Strong Somatic Variant Results}
 
 <<format,echo=FALSE>>=
 tt <- data.frame(Gene=tab$Gene,
                  Position=tab$Variant,
                  Consequence=tab$Amino.Acid,
+                 Type=tab$Type,
+                 Status=tab$Status,
                  #ZYGOSITY=tab$Genotype,
                  #FREQ=tab$FREQ,
                  #INTERP=NA,
                  stringsAsFactors = F
                  )
 tt$Position <- gsub('>', '\\\\textgreater ', tt$Position)
-tt$Position <- gsub('_', '\\\\_', tt$Position)
+tt$Position <- gsub('_', ' ', tt$Position)
+#tt$Position <- gsub('_', '\\\\_', tt$Position)
 tt$Consequence <- gsub(',', ' ', tt$Consequence)
 
+refpos <- function(pos) {
+  z <- strsplit(pos, ' ')[[1]][2]
+  zz <- strsplit(z, '/')
+  
+  if(nchar(zz[[1]][1]) > 6) {
+    y <- zz[[1]][1]
+    y1 <- substr(y,1,2)
+    y2 <- substr(y, nchar(y)-1, nchar(y))
+    yy <- paste0(y1,'..',y2)
+  } else {
+    yy <- zz[[1]][1]
+  }
+  
+  if(nchar(zz[[1]][2]) > 6) {
+    x <- zz[[1]][2]
+    x1 <- substr(x, 1,2)
+    x2 <- substr(x, nchar(x)-1, nchar(x))
+    xx <- paste0(x1, '..', x2)
+  } else {
+    xx <- zz[[1]][2]
+  }
+  
+  paste0(yy,'/',xx)
+}
+
+tt$Position <- paste(strsplit(tt$Position, ' ')[[1]][1], unlist(lapply(tt$Position, refpos)))
+
+tt$Consequence <- gsub('.*p.', '', tt$Consequence)
+tt$Consequence <- gsub('.*c.', '', tt$Consequence)
+tt$Consequence <- gsub('_', '\\\\_', tt$Consequence)
 @
 
 %\subsection*{SNVs}
 
 <<fmSNV, echo=FALSE, results='asis'>>=
-  Rtab <- xtable(tt, align=c("l","p{2cm}","p{6cm}","p{4cm}"))
+  tts <- subset(tt, Status=='StrongSomatic')
+  Rtab <- xtable(tts[,c(1,2,4,3)], align=c("l","p{1.5cm}","p{2cm}","p{1cm}","p{9cm}"))
 
-  addtorow <- list(pos = list(2:nrow(tt)-1), command = "\\hdashline \n")
+  addtorow <- list(pos = list(2:nrow(tts)-1), command = "\\hdashline \n")
 
   print(Rtab, 
         include.rownames=FALSE,
@@ -175,7 +209,8 @@ tt$Consequence <- gsub(',', ' ', tt$Consequence)
         caption.placement='bottom',
         add.to.row = addtorow,
         tabular.environment = 'longtable',
-        floating = F
+        floating = F,
+        size="\\fontsize{8pt}{10pt}\\selectfont"
         )
 @
 

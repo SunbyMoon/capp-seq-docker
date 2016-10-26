@@ -60,6 +60,7 @@ if (is.null(opt$id)){
 
 ##
 packages(knitr)
+packages(VariantAnnotation)
 
 # rando string fucntion
 # code from https://ryouready.wordpress.com/2008/12/18/generate-random-string-name/
@@ -76,15 +77,22 @@ MHmakeRandomString <- function(n=1, lenght=12)
 }
 
 ## parse annotation file
-tab <- read.csv2(opt$anno, 
-                 stringsAsFactors = F, 
-                 sep = '\t')
+#tab <- read.csv2(opt$anno, 
+#                 stringsAsFactors = F, 
+#                 sep = '\t',
+#                 header = T)
+vcf <- readVcf(opt$anno, 'hg19')
 
-tabVarscan <- subset(tab, VariantCaller=='Varscan2 Somatic' | is.na(VariantCaller))[,c('Gene','Variant','Amino.Acid')]
-tabMuTect <- subset(tab, VariantCaller=='MuTect')[,c('Gene','Variant','Amino.Acid')]
+# filter germline
+vcf.nogerm <- vcf[info(vcf)$STATUS!='Germline']
 
-tab <- merge(tabVarscan, tabMuTect, by=c('Variant', 'Gene', 'Amino.Acid'), all=T)
-# sort by gene nanme
+tab <- data.frame(Variant=names(ranges(vcf.nogerm)),
+                  Gene=unlist(lapply(info(vcf.nogerm)$Gene.knownGene, function(x) paste(x, collapse = ' '))),
+                  Amino.Acid=unlist(lapply(info(vcf.nogerm)$AAChange.knownGene, function(x) paste(x, collapse = ' '))),
+                  Type=info(vcf.nogerm)$TYPE,
+                  Status=info(vcf.nogerm)$STATUS
+                  )
+
 tab <- tab[order(tab$Gene),]
 
 ## patient info
@@ -167,7 +175,7 @@ filename <- paste0(opt$id,'_',gsub(' ', '-',Sys.time()),'.pdf')
 
 out <- paste0(tempdir(),'/',MHmakeRandomString())
 dir.create(out)
-knit('patientReport.Rnw', output = paste0(out,'/patientReport.tex'))
+knit('/home/anu/capp-seq-docker/patientReport.Rnw', output = paste0(out,'/patientReport.tex'))
 system(paste0('pdflatex -interaction=nonstopmode -output-directory=', out ,' ', out, '/patientReport.tex'))
 file.copy(paste0(out, '/patientReport.pdf'), paste(opt$out,filename,sep='/')) # move pdf to file for downloading
 
