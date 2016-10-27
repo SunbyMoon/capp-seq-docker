@@ -139,6 +139,10 @@ RUN pip install --upgrade pip && pip install cnvkit
 # add cnvkit filtering script
 ADD cnvkit_filter.R /home/
 
+# add targets regions 
+ADD PANCeq_CNV_capture_targets_6.bed /home/
+ADD PANCeq_capture_targets_6.bed /home/
+
 # install VarDict
 RUN  cd /opt/software/ && \
   git clone --recursive https://github.com/AstraZeneca-NGS/VarDictJava.git && \

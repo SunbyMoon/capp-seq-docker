@@ -103,7 +103,7 @@ docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/c
 
 # Run CNVkit
 echo -e "\e[0;36mRunning CNVkit \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam --targets $regions --fasta $bwa_index --split --output-reference $refcnvkit --output-dir $cnv_dir --scatter'
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam --targets $cnvkit_regions --fasta $bwa_index --split --output-reference $refcnvkit --output-dir $cnv_dir --scatter'
 
 # Run CNVkit filter
 echo -e "\e[0;36mFiltering CNVkit results \e[0m"

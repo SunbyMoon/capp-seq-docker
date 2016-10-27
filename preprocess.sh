@@ -28,6 +28,7 @@ echo "regions=/data/database/avera/CAPPSeq_Avera_capture_targets_6.bed" >> $envl
 echo "cont=/home/anu/capp-seq-docker/cont.R" >> $envlist #image
 echo "contpanel=/home/anu/capp-seq-docker/contPanel.csv" >> $envlist #image
 echo "cnvkit_filter=/home/anu/capp-seq-docker/cnvkit_filter.R" >> $envlist #image
+echo "cnvkit_regions=/home/anu/capp-seq-docker/PANCeq_CNV_capture_targets_6.bed" >> $envlist #image
 echo -e "\n" >> $envlist 
 
 echo "tinfastq1="$fastq"/"$tsample"_1.fastq.gz" >> $envlist
