@@ -64,9 +64,9 @@ docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/c
 
 # Run Qualimap
 echo -e "\e[0;36mRunning Qualimap on tumor bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c ' qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff $regions -bam $toutbam -outdir $qm_dir --outfile $tqmout'
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c ' qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff $regions -bam $toutbam -outdir $tqm_dir --outformat HTML'
 echo -e "\e[0;36mRunning Qualimap on normal bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c ' qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff $regions -bam $goutbam -outdir $qm_dir --outfile $gqmout'
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c ' qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff $regions -bam $goutbam -outdir $gqm_dir --outformat HTML'
 
 # Create pileup 
 echo -e "\e[0;36mCreating tumor pileup\e[0m"
@@ -91,11 +91,15 @@ echo -e "\e[0;36mCreating compressed VCF\e[0m"
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 > $outvardict'
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
 
 # Annotate VarDict VCF with Annovar
 echo -e "\e[0;36mAnnotating variants with Annovar\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl /home/anu/capp-seq-docker/table_annovar.pl $outvardict $annodb -buildver hg19 -out $annovarout -protocol knownGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
+
+# Filter variants
+echo -e "\e[0;36mFiltering variants\e[0m"
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/anu/capp-seq-docker/variant_filter.R $annovcf $filtvcf'
 
 # Run contanimation check script
 echo -e "\e[0;36mRunning contamination check \e[0m"
@@ -107,8 +111,13 @@ docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/c
 
 # Run CNVkit filter
 echo -e "\e[0;36mFiltering CNVkit results \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript $cnvkit_filter $sample $cnvdir'
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript $cnvkit_filter $sample $cnvkitcns $cnvkitout'
+
+# Generate patient report
+#docker run -v /data:/data -v /tmp:/tmp -v /home:/home -i --env-file /home/anu/capp-seq-docker/env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/anu/capp-seq-docker/arep.R -a "$annovcf" -i "$sample" -o "$report_dir"'
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -i --env-file /data/storage/capp-seq/panceq/CCD347.env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/anu/capp-seq-docker/arep.R -v "$filtvcf" -C "$cnvkitout" -i "$sample" -o "$report_dir" -d /home/anu/capp-seq-docker'
 
 echo -e "\e[0;36mDone! \e[0m"
 exit 0
+
 

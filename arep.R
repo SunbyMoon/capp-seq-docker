@@ -35,20 +35,24 @@ packages <- function(x){
 }
 packages(optparse)
 option_list = list(
-  make_option(c("-a", "--anno"), type="character", default=NULL, 
-              help="annotation file", metavar="character"),
+  make_option(c("-v", "--vcf"), type="character", default=NULL, 
+              help="annovar annoted vardict vcf file", metavar="character"),
+  make_option(c("-C", "--cnv"), type="character", default=NULL, 
+              help="cnfkit output", metavar="character"),
   make_option(c("-i", "--id"), type="character", default=NULL, 
               help="patient ID", metavar="character"),
   make_option(c("-sc", "--sample_config"), type="character", default=NULL, 
               help="sample config file in .yaml format", metavar="character"),
   make_option(c("-o", "--outdir"), type="character", default="~", 
-              help="output file path [default= %default]", metavar="character")
+              help="output file path [default= %default]", metavar="character"),
+  make_option(c("-d", "--scriptdir"), type="character", default="~",
+              help="script file path [default= %default]", metavar="character")
 )
 
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
 
-if (is.null(opt$anno)){
+if (is.null(opt$vcf)){
   print_help(opt_parser)
   stop("A annotation file needs to be provided", call.=FALSE)
 }
@@ -57,10 +61,19 @@ if (is.null(opt$id)){
   stop("A patient ID needs to be provided", call.=FALSE)
 }
 
-
 ##
 packages(knitr)
 packages(VariantAnnotation)
+packages(plyr)
+packages(rtracklayer)
+
+setwd(opt$scriptdir)
+
+# cancer genes
+cg <- read.csv2('cancer_genes.csv', sep='\t', stringsAsFactors = F)
+
+#isoforms
+li <- read.csv2('longest_resfseq.txt', sep = ' ', stringsAsFactors = F)
 
 # rando string fucntion
 # code from https://ryouready.wordpress.com/2008/12/18/generate-random-string-name/
@@ -76,24 +89,124 @@ MHmakeRandomString <- function(n=1, lenght=12)
   return(randomString)
 }
 
-## parse annotation file
-#tab <- read.csv2(opt$anno, 
-#                 stringsAsFactors = F, 
-#                 sep = '\t',
-#                 header = T)
-vcf <- readVcf(opt$anno, 'hg19')
+vcf <- readVcf(opt$vcf, 'hg19')
 
-# filter germline
-vcf.nogerm <- vcf[info(vcf)$STATUS!='Germline']
-
-tab <- data.frame(Variant=names(ranges(vcf.nogerm)),
-                  Gene=unlist(lapply(info(vcf.nogerm)$Gene.knownGene, function(x) paste(x, collapse = ' '))),
-                  Amino.Acid=unlist(lapply(info(vcf.nogerm)$AAChange.knownGene, function(x) paste(x, collapse = ' '))),
-                  Type=info(vcf.nogerm)$TYPE,
-                  Status=info(vcf.nogerm)$STATUS
+tab <- data.frame(Variant=names(ranges(vcf)),
+                  Gene=unlist(lapply(info(vcf)$Gene.refGene, function(x) paste(x, collapse = ' '))),
+                  Amino.Acid=unlist(lapply(info(vcf)$AAChange.refGene, function(x) paste(x, collapse = ' '))),
+                  Type=info(vcf)$TYPE,
+                  Status=info(vcf)$STATUS,
+                  AlleleFrequency=geno(vcf)$AF[,1],
+                  RadialSVM=unlist(info(vcf)$RadialSVM_pred),
+                  CADD=unlist(info(vcf)$CADD_phred),
+                  ExAC=as.numeric(as.vector(unlist(info(vcf)$ExAC_ALL))),
+                  CLINSIG=unlist(lapply(as.vector(info(vcf)$CLINSIG), paste, collapse='|')),
+                  COSMIC=unlist(lapply(info(vcf)$cosmic70, function(x) paste(x, collapse = ','))),
+                  ICGC=unlist(info(vcf)$ICGC_Id)
                   )
 
-tab <- tab[order(tab$Gene),]
+# select isoform based on longest transcript
+tab$Amino.Acid.Uq <- NA
+for(i in 1:length(tab$Amino.Acid)) {
+  s <- unlist(strsplit(unlist(as.vector(unlist(tab$Amino.Acid[i]))), ' '))
+  if(length(s)>1) {
+    ts <- li$name[match(tab$Gene[i], li$name2)]
+    if(length(grep(ts, s))==1) {
+      tab$Amino.Acid.Uq[i] <- s[grep(ts, s)]  
+    } else {
+      tab$Amino.Acid.Uq[i] <- s[1]
+    }
+  } else {
+    tab$Amino.Acid.Uq[i] <- s
+  }
+}
+
+#tab <- tab[order(tab$Gene),]
+
+# add drive / actionable status
+inf <- sapply(tab$Gene, function(x) {
+  if (x %in% cg$symbol) {
+    if(cg[match(x, cg$symbol),]$intogenDriver==1 & cg[match(x, cg$symbol),]$actionable==1) {
+      'driver,actionable'
+    } else if(cg[match(x, cg$symbol),]$intogenDriver==1 & cg[match(x, cg$symbol),]$actionable==0) {
+      'driver'
+    } else if (cg[match(x, cg$symbol),]$intogenDriver==0 & cg[match(x, cg$symbol),]$actionable==1) {
+      'actionable'
+    } else {
+      ''
+    }
+  } else {
+    ''
+  }
+})
+
+tab <- cbind(tab, Info=inf)
+
+# Variant Rank
+# path <- ifelse(tab$RadialSVM=='D' & as.numeric(as.vector(tab$CADD))>=20, 2, ifelse(tab$RadialSVM=='D' | as.numeric(as.vector(tab$CADD))>=20, 1, NA))
+# info <- ifelse(tab$Info!='', ifelse(tab$Info=='driver,actionable', 2, 1), 0)
+# rank <- apply(cbind(path, info), 1, sum, na.rm=T)
+# tab <-  cbind(tab, path, info, rank)
+
+pred <- ifelse(tab$RadialSVM=='D' & as.numeric(as.vector(tab$CADD))>=20, 1, ifelse(tab$RadialSVM=='T' & as.numeric(as.vector(tab$CADD))<20, -1, ifelse(tab$RadialSVM=='D' | as.numeric(as.vector(tab$CADD))>=20, 0.5, NA)))
+info <- ifelse(tab$Info!='', ifelse(tab$Info=='driver,actionable', 1, 0.5), 0)
+exac <- ifelse(tab$ExAC<=0.01, 1, ifelse(tab$ExAC>0.01, -1, NA))
+known <- ifelse(tab$ICGC!='.' | tab$COSMIC!='.', 0.5, 0)
+clin <- ifelse(grepl('Pathogenic', tab$CLINSIG), 1, ifelse(grepl('Benign', tab$CLINSIG), -1, 0))
+
+rank <- 3+apply(cbind(pred,info,exac,known,clin), 1, sum, na.rm=T)
+
+rankS <- sapply(rank, function(x) {
+  if(x<1.5) {
+    'benign'
+  } else if(x>=1.5 & x<=2) {
+    'likely benign'
+  } else if(x>2 & x<=3) {
+    'VUS, benign'
+  } else if(x>3 & x<=4) {
+    'VUS'
+  } else if(x>4 & x<=5) {
+    'VUS, pathogenic'
+  } else if(x>5 & x <=6) {
+    'likely pathogenic'
+  } else if(x>6) {
+    'pathogenic'
+  }
+})
+
+tab <- cbind(tab, rank, rankS)
+tab <- arrange(tab, rank, Gene, decreasing=T)
+
+# read in CNV data
+if(any(names(opt)=='cnv')) {
+  cnv <- read.csv2(opt$cnv, sep='\t', stringsAsFactors = F)
+  
+  parseGene <- function(i) {
+    x <- strsplit(i, ',')
+    xx <- lapply(x, strsplit, ';')
+    xxx <- cbind(sapply(xx[[1]], '[[', 2), sapply(xx[[1]], '[[', 1))
+    xxx[,1] <- gsub('gene_name=', '', xxx[,1])
+    xxx[,2] <- gsub('exon=', '', xxx[,2])
+    colnames(xxx) <- c('Gene', "Exon")
+    xxx <- as.data.frame(xxx)
+    if(length(unique(xxx$Gene))==1) {
+      data.frame(Gene=xxx[1,1],Exon=paste(xxx$Exon, collapse=','))
+    } else {
+      aggregate(Exon ~ Gene, xxx, paste, collapse=',')
+    }
+  }
+  
+  cnvls <- lapply(cnv$gene, parseGene)
+  
+  for(i in 1:length(cnvls)) {
+    cnvls[[i]] <- cbind(cnvls[[i]], CopyNumber=round(as.numeric(cnv$copies),2)[i])
+  }
+  
+  cnvtab <- data.frame(do.call(rbind,cnvls), stringsAsFactors = F)
+  cnvtab$Gene <- as.vector(cnvtab$Gene)
+  cnvtab <- cnvtab[order(cnvtab$Gene),]
+}
+
 
 ## patient info
 patient <- list(
@@ -175,7 +288,7 @@ filename <- paste0(opt$id,'_',gsub(' ', '-',Sys.time()),'.pdf')
 
 out <- paste0(tempdir(),'/',MHmakeRandomString())
 dir.create(out)
-knit('/home/anu/capp-seq-docker/patientReport.Rnw', output = paste0(out,'/patientReport.tex'))
+knit('patientReport.Rnw', output = paste0(out,'/patientReport.tex'))
 system(paste0('pdflatex -interaction=nonstopmode -output-directory=', out ,' ', out, '/patientReport.tex'))
 file.copy(paste0(out, '/patientReport.pdf'), paste(opt$out,filename,sep='/')) # move pdf to file for downloading
 

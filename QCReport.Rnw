@@ -1,0 +1,490 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Next Generation Sequencing QC Report
+%
+% Original authors:
+% Tobias Meissner
+%
+% License:
+% MIT
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%  Data Input
+%----------------------------------------------------------------------------------------
+
+<<r init, echo=FALSE, message=FALSE>>=
+library(knitr)
+library(xtable)
+library(XML)
+source('BaseSpaceRunInfo.R')
+
+sanitizeLatexS <- function(str) {
+    gsub('([#$%&~_\\^\\\\{}])', '\\\\\\\\\\1', str, perl = TRUE);
+}
+@
+
+<<dataIn, echo=FALSE>>=
+## FASTQC
+fastqc1T <- read.csv2(unz(fastqc1FileT, paste(opt$id, '-', opt$id_tumor,'_1_fastqc/summary.txt',sep='')), sep='\t', header=F)
+fastqc2T <- read.csv2(unz(fastqc2FileT, paste(opt$id, '-', opt$id_tumor,'_2_fastqc/summary.txt',sep='')), sep='\t', header=F)
+fastqc1B <- read.csv2(unz(fastqc1FileB, paste(opt$id, '-', opt$id_blood,'_1_fastqc/summary.txt',sep='')), sep='\t', header=F)
+fastqc2B <- read.csv2(unz(fastqc2FileB, paste(opt$id, '-', opt$id_blood,'_2_fastqc/summary.txt',sep='')), sep='\t', header=F)
+colnames(fastqc1T) <- c('Result', 'Analysis', 'File')
+colnames(fastqc2T) <- c('Result', 'Analysis', 'File')
+colnames(fastqc1B) <- c('Result', 'Analysis', 'File')
+colnames(fastqc2B) <- c('Result', 'Analysis', 'File')
+
+parseCoverage <- function(coverage) {
+  paste0(gsub("%", "", strsplit(as.character(coverage), " ")[[1]][9]), "%")
+}
+
+qt <- read.csv(qualimapTextT, sep="\t")
+qht <- readHTMLTable(qualimapHTMLT, header=TRUE)
+qualimapStatsT <- list(
+    `Total Reads` = as.numeric(gsub(",", "", strsplit(as.character(qt[10,]), " = ")[[1]][2])),
+    `Duplication Rate` = paste0(as.character(round(100*(as.numeric(gsub(",", "", strsplit(as.character(qt[19,]), " = ")[[1]][2]))/as.numeric(gsub(",", "", strsplit(as.character(qt[10,]), " = ")[[1]][2])))), 2), "%"),
+    `Mapped reads, both in pair` = strsplit(as.character(qht[[4]][7,][[2]]), " / ")[[1]][2],
+    `Mapped reads, both in pair, inside of regions` = strsplit(as.character(qht[[5]][4,][[2]]), " / ")[[1]][2],
+    `GC Content` = strsplit(as.character(qt[32,]), " = ")[[1]][2],
+    `Median Insert Size` = strsplit(as.character(qt[23,]), " = ")[[1]][2],
+    `Mean Coverage` = paste0(gsub("X", "", strsplit(as.character(qt[42,]), " = ")[[1]][2]), "X"),
+    `StdDev Coverage` = paste0(gsub("X", "", strsplit(as.character(qt[43,]), " = ")[[1]][2]), "X"),
+    `1X` = parseCoverage(qt[44,]),
+    `10X` = parseCoverage(qt[53,]),
+    `20X` = parseCoverage(qt[63,]),
+    `50X` = parseCoverage(qt[93,])
+    )
+
+qb <- read.csv(qualimapTextB, sep="\t")
+qhb <- readHTMLTable(qualimapHTMLB, header=TRUE)
+qualimapStatsB <- list(
+    `Total Reads` = as.numeric(gsub(",", "", strsplit(as.character(qb[10,]), " = ")[[1]][2])),
+    `Duplication Rate` = paste0(as.character(round(100*(as.numeric(gsub(",", "", strsplit(as.character(qb[19,]), " = ")[[1]][2]))/as.numeric(gsub(",", "", strsplit(as.character(qb[10,]), " = ")[[1]][2])))), 2), "%"),
+    `Mapped reads, both in pair` = strsplit(as.character(qhb[[4]][7,][[2]]), " / ")[[1]][2],
+    `Mapped reads, both in pair, inside of regions` = strsplit(as.character(qhb[[5]][4,][[2]]), " / ")[[1]][2],
+    `GC Content` = strsplit(as.character(qb[32,]), " = ")[[1]][2],
+    `Median Insert Size` = strsplit(as.character(qb[23,]), " = ")[[1]][2],
+    `Mean Coverage` = paste0(gsub("X", "", strsplit(as.character(qb[42,]), " = ")[[1]][2]), "X"),
+    `StdDev Coverage` = paste0(gsub("X", "", strsplit(as.character(qb[43,]), " = ")[[1]][2]), "X"),
+    `1X` = parseCoverage(qb[44,]),
+    `10X` = parseCoverage(qb[53,]),
+    `20X` = parseCoverage(qb[63,]),
+    `50X` = parseCoverage(qb[93,])
+    )
+@
+
+%----------------------------------------------------------------------------------------
+%  Sample Information
+%----------------------------------------------------------------------------------------
+
+<<sampleinfo, echo=FALSE>>=
+
+@
+
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[11pt, stdletter, dateno]{newlfm}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{wallpaper}
+\usepackage{array}
+
+%% styling
+\newcolumntype{x}[1]{>{\centering\arraybackslash\hspace{0pt}}p{#1}} % centered with column 
+\newlfmP{noheadline,noHeadline}
+%\leftmarginsize{0in}
+%\rightmarginsize{0in}
+%\topmarginsize{2mm}
+%\topmarginskip{0in}
+%\headermarginsize{0cm}
+%\headermarginskip{0in}
+
+%% header
+\unprtop{0.65cm}
+\Rheader{\parbox{\textwith}{\small{\begin{tabbing} \textbf{Patient Name} \hspace*{1.25cm} \= \textbf{Report Date} \hspace*{0.75cm} \= \textbf{Tumor Type} \\ \Sexpr{sample$patient$name}, \Sexpr{sample$patient$surname} \> \today \> \Sexpr{sample$patient$tumor_type} \end{tabbing}}}}
+%% footer
+\unprbottom{1.4cm}
+\Lfooter{\scriptsize{Electronically Signed by \Sexpr{sample$medical_director$surname} \Sexpr{sample$medical_director$name} \Sexpr{sample$medical_director$title} | CLIA Number: \Sexpr{sample$lab$clia_number} | \today \\ \Sexpr{sample$lab$name}, \Sexpr{sample$lab$street}, \Sexpr{sample$lab$city}, \Sexpr{sample$lab$state}, \Sexpr{sample$lab$zip}  \hfill page \thepage}} 
+\lfooter{\scriptsize{Electronically Signed by \Sexpr{sample$medical_director$surname} \Sexpr{sample$medical_director$name} \Sexpr{sample$medical_director$title} | CLIA Number: \Sexpr{sample$lab$clia_number} | \today \\ \Sexpr{sample$lab$name}, \Sexpr{sample$lab$street}, \Sexpr{sample$lab$city}, \Sexpr{sample$lab$state}, \Sexpr{sample$lab$zip}  \hfill page \thepage}} 
+
+%% add section support 
+\newcounter{section}
+\newcounter{subsection}[section]
+\newcounter{subsubsection}[section]
+\setcounter{secnumdepth}{4}
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+                                   {-3.5ex \@plus -1ex \@minus -.2ex}%
+                                   {2.3ex \@plus.2ex}%
+                                   {\normalfont\normalsize\bfseries}}
+\newcommand\subsection{\@startsection{subsection}{2}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+                                     {-3ex\@plus -1ex \@minus -.2ex}%
+                                     {0.7ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}                                     
+\renewcommand\thesection{\@arabic\c@section}
+\renewcommand\thesubsection{\thesection.\@arabic\c@subsection}
+\renewcommand\thesubsubsection{\thesubsubsection.\@arabic\c@subsubsection}
+\makeatother
+
+%----------------------------------------------------------------------------------------
+%  ADDRESSEE SECTION
+%----------------------------------------------------------------------------------------
+%\nameto{\Sexpr{sample$physician_addr$surname} \Sexpr{sample$physician_addr$name}} 
+%\addrto{\parbox{3in}{\Sexpr{sample$physician_addr$street} \\ \Sexpr{sample$physician_addr$city}, \Sexpr{sample$physician_addr$state}, \Sexpr{sample$physician_addr$zip}}}
+                   
+%----------------------------------------------------------------------------------------
+%  YOUR NAME & ADDRESS SECTION
+%----------------------------------------------------------------------------------------                     
+%% addres send from
+%\namefrom{Sherlock Holmes} 
+%\addrfrom{\parbox{2in}{221B Baker Street \\ London, UK}}
+
+%\greetto{}
+
+%----------------------------------------------------------------------------------------
+%  Start Document
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+%\SweaveOpts{concordance=TRUE}
+
+\begin{newlfm}
+
+%\ThisCenterWallPaper{1}{avera_letter.pdf}
+\CenterWallPaper{1}{../pdf/avera_letter.pdf}
+
+%----------------------------------------------------------------------------------------
+%	Content
+%----------------------------------------------------------------------------------------
+
+\vspace*{-4.25cm}
+\textbf{PANCeq QC Report for Sample \Sexpr{sanitizeLatexS(sampleID)}}
+
+\vspace*{-0.5cm}
+\line(1,0){475}  
+
+%% SAMPLE INFORMATION
+
+\vspace{-0.3cm}
+\begin{scriptsize}
+\begin{tabbing}
+\textbf{Date of birth:} \= \Sexpr{sample$patient$date_of_birth} \hspace{0.7cm}  \= \textbf{Medical Facility:} \hspace{0.4cm} \= \Sexpr{sample$physician$facility} \hspace{0.4cm} \= \textbf{Specimen Received:} \= \Sexpr{sample$sample_details$received} \\ 
+\textbf{Sex:} \>\Sexpr{sample$patient$sex} \> \textbf{Ordering Physician:} \> \Sexpr{sample$physician$name}, \Sexpr{sample$physician$surname} \> \textbf{Specimen Site:} \> \Sexpr{sample$patient$tumor_site} \\
+\textbf{Specimen ID:} \>\Sexpr{sample$patient$specimen_id} \> \textbf{Medical Facility ID:} \> \Sexpr{sample$physician$facility_id} \> \textbf{Date of Collection:} \> \Sexpr{sample$sample_details$biopsy_date} \\
+\> \> \textbf{Pathologist:} \> \Sexpr{sample$pathologist$name}, \Sexpr{sample$pathologist$surname} \> \textbf{Specimen Type:} \> \Sexpr{sample$patient$specimen_type}
+\end{tabbing}
+\end{scriptsize}
+\vspace{-0.6cm}
+\line(1,0){475}
+
+%% Run Info
+
+<<runinfo,echo=FALSE, message=F>>=
+runSummary <- lapply(sample$run_info$run_id, getRunSummary, opt$baseSpace_token)
+runSummarySamples <- lapply(runSummary, function(x) {
+  ind <- grep(sampleID, x$Sample)
+  #ind <- grep('054-T1-DNA', x$Sample)
+  x[ind, ]
+})
+runSummarySamples <- do.call(rbind, runSummarySamples)
+
+# how many runs for this sample
+runs <- unique(runSummarySamples$`Run Id`)
+
+# get only single runs
+runSummarySample <- runSummarySamples[match(runs, runSummarySamples$`Run Id`),]
+
+total_yield_gb <- sapply(runSummary, function(x) {
+  round((sum(x$`Total Reads`)-x$`Total Reads`[grep('Undetermined', x$Sample)])*300/1000000000,2)
+})
+percent_q_score_30 <- runSummarySample$`Percent Q30`
+percent_phix_alg <- runSummarySample$`Percent Aligned`
+phix_error_rate <- runSummarySample$`Error Rate`
+run_id <- runSummarySample$`Run Id`
+
+runinfoGB <- ifelse(total_yield_gb>=90, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+runinfoQ30 <- ifelse(percent_q_score_30>=75, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+runinfoPhiX <- ifelse(percent_phix_alg>=0.05, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+runinfoPhiXErr <- ifelse(phix_error_rate<2.5, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+@
+
+<<runinfo_table,echo=FALSE, results='asis'>>=
+for (i in 1:length(runs)) {
+  cat("\\vspace*{-0.6cm}\n")
+  cat(paste0("\\section*{Run Info ",i,"}\n"))
+  cat("\\vspace*{-0.5cm}\n")
+  cat("\\begin{tabularx}{\\textwidth}{ p{5.5cm} p{3.5cm} p{3.5cm} x{2cm} } \\hline\n")
+  cat("Metric: & Value & Expected & QCPassed \\tabularnewline \\hline\n")
+  cat(paste0("Run ID: & \\Sexpr{",run_id[i],"} & & \\tabularnewline\n"))
+  cat(paste0("Seq-Type: &  \\multicolumn{3}{l}{\\Sexpr{",sample$sample_details$seq_type[i],"}} \\tabularnewline\n"))
+  cat(paste0("Seq-Protocoll: & \\multicolumn{3}{l}{\\Sexpr{",sample$sample_details$seq_protocoll[i],"}} \\tabularnewline\n"))
+  cat(paste0("Total Yield: &  \\Sexpr{",total_yield_gb[i],"} (GB) & 90 - 120 (GB) & \\Sexpr{",runinfoGB[i],"} \\tabularnewline\n"))
+  cat(paste0("Q30: &  \\Sexpr{",percent_q_score_30[i],"} (\\%) & \\textgreater 75 (\\%) & \\Sexpr{",runinfoQ30[i],"} \\tabularnewline\n"))
+  cat(paste0("PhiX aligned: &  \\Sexpr{",percent_phix_alg[i],"} (\\%) & \\textgreater 0.05 (\\%) & \\Sexpr{",runinfoPhiX[i],"} \\tabularnewline\n"))
+  cat(paste0("PhiX error: &  \\Sexpr{",phix_error_rate[i],"} (\\%) & \\textless 2.5 (\\%) & \\Sexpr{",runinfoPhiXErr[i],"}\n"))
+  cat("\\end{tabularx}\n\n")
+}
+@
+
+%% Sample Sequencing Info
+
+<<seqinfo, echo=FALSE>>=
+totalReadsSampleT <- round(sum(runSummarySamples[runSummarySamples$Sample==sampleT,]$`Total Reads`)/1000000,2)
+totalReadsSampleB <- round(sum(runSummarySamples[runSummarySamples$Sample==sampleB,]$`Total Reads`)/1000000,2)
+seqinfoTotalReadsT <- ifelse(totalReadsSampleT>=200, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+seqinfoTotalReadsB <- ifelse(totalReadsSampleB>=200, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+seqinfoInsertT <- ifelse(qualimapStatsT$`Median Insert Size`>=175 & qualimapStatsT$`Median Insert Size`<=350, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+seqinfoInsertB <- ifelse(qualimapStatsB$`Median Insert Size`>=175 & qualimapStatsB$`Median Insert Size`<=350, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+@
+
+\vspace*{-0.4cm}
+\section*{Germline Sample Sequencing Info}
+\vspace*{-0.5cm}
+\begin{tabularx}{\textwidth}{  p{5.5cm} p{3.5cm} p{3.5cm} x{2cm} } \hline
+Metric: & Value & Expected & QCPassed \tabularnewline \hline
+
+<<seqinfo_tableB, results='asis', echo=FALSE>>=
+for (i in 1:nrow(subset(runSummarySamples, Sample==sampleB))) {
+  cat(paste0("Number of Reads Run ",i,": &  \\Sexpr{",round(subset(runSummarySamples, Sample==sampleB)$`Total Reads`[i]/1000000,2),"} (mio) &  &  \\tabularnewline\n"))
+}
+@
+
+Total Reads: & \Sexpr{totalReadsSampleB} (mio) & 200 (mio) & \Sexpr{seqinfoTotalReadsB} \tabularnewline
+Insert Size: & \Sexpr{qualimapStatsB$`Median Insert Size`} (bp) & 175 - 350 (bp) & \Sexpr{seqinfoInsertB}
+\end{tabularx}
+ 
+\vspace*{-0.4cm}
+\section*{Tumor Sample Sequencing Info}
+\vspace*{-0.5cm}
+\begin{tabularx}{\textwidth}{  p{5.5cm} p{3.5cm} p{3.5cm} x{2cm} } \hline
+Metric: & Value & Expected & QCPassed \tabularnewline \hline
+
+<<seqinfo_tableT, results='asis', echo=FALSE>>=
+for (i in 1:nrow(subset(runSummarySamples, Sample==sampleT))) {
+ cat(paste0("Number of Reads Run ",i,": &  \\Sexpr{",round(subset(runSummarySamples, Sample==sampleB)$`Total Reads`[i]/1000000,2),"} (mio) &  &  \\tabularnewline\n"))
+}
+@
+
+Total Reads: & \Sexpr{totalReadsSampleT} (mio) & 200 (mio) & \Sexpr{seqinfoTotalReadsT} \tabularnewline
+Insert Size: & \Sexpr{qualimapStatsT$`Median Insert Size`} (bp) & 175 - 350 (bp) & \Sexpr{seqinfoInsertT}
+\end{tabularx}
+
+%% Sample Mapping Info
+
+\vspace*{-0.4cm}
+\section*{Germline Sample Mapping Info}
+\vspace*{-0.5cm}
+<<samplemappingB, echo=FALSE, results='asis', warning=FALSE>>=
+qualimapStats <- qualimapStatsB
+
+mappingTable <- data.frame(
+                      Metric=c('Total reads',
+                               'Duplication rate',
+                               'Mapped reads',
+                               'Mapped reads inside of regions',
+                               'Mean Coverage',
+                               'Coverage 1x',
+                               'Coverage 10x',
+                               'Coverage 20x',
+                               'Coverage 50x',
+                               'GC Content'
+                               
+                      ),
+                      Value=c(round(qualimapStats$`Total Reads`/1000000,2),
+                              gsub('%',' (\\\\%)',qualimapStats$`Duplication Rate`),
+                              gsub('%',' (\\\\%)',qualimapStats$`Mapped reads, both in pair`),
+                              gsub('%',' (\\\\%)',qualimapStats$`Mapped reads, both in pair, inside of regions`),
+                              gsub(',', '', gsub('\\.[1-9]*', '', qualimapStats$`Mean Coverage`)),
+                              gsub('%',' (\\\\%)',qualimapStats$`1X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`10X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`20X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`50X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`GC Content`)
+                      ),                      
+                      Expected=c('\\textgreater 200 (mio)',
+                                 '\\textless 50 (\\%)',
+                                 '\\textgreater 95 (\\%)',
+                                 '\\textgreater 75 (\\%)',
+                                 '\\textgreater 1000X',
+                                 '\\textgreater 99 (\\%)',
+                                 '\\textgreater 97 (\\%)',
+                                 '\\textgreater 95 (\\%)',
+                                 '\\textgreater 85 (\\%)',
+                                 '\\textless 52 (\\%)'
+                      ),
+                      QCPassed=NA
+                      )
+
+# check if qc passed
+mappingTable$QCPassed[1] <- ifelse(qualimapStats$`Total Reads`>=200000000, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+mappingTable$QCPassed[2] <- ifelse(as.numeric(gsub('%','',qualimapStats$`Duplication Rate`))<=50, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+mappingTable$QCPassed[3] <- ifelse(as.numeric(gsub('%','',qualimapStats$`Mapped reads, both in pair`))>=95, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[4] <- ifelse(as.numeric(gsub('%','',qualimapStats$`Mapped reads, both in pair, inside of regions`))>=75, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[5] <- ifelse(as.numeric(gsub('X', '', gsub(',', '', gsub('\\.', '', qualimapStats$`Mean Coverage`))))>=1000, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")    
+mappingTable$QCPassed[6] <- ifelse(as.numeric(gsub('%','',qualimapStats$`1X`))>=99, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[7] <- ifelse(as.numeric(gsub('%','',qualimapStats$`10X`))>=97, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[8] <- ifelse(as.numeric(gsub('%','',qualimapStats$`20X`))>=95, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[9] <- ifelse(as.numeric(gsub('%','',qualimapStats$`50X`))>=85, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[10] <- ifelse(as.numeric(gsub('%','',qualimapStats$`GC Content`))>52, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+
+mapping.Table <- xtable(mappingTable)
+align(mapping.Table) <- "lp{5.5cm}p{3.5cm}p{3.5cm}x{2cm}"
+print(mapping.Table,
+      #align=c("c","c","c","c","c"),
+      include.rownames=FALSE,
+      type='latex',
+      sanitize.text.function = function(x) x,
+      latex.environments = "left",
+      tabular.environment = 'longtable',
+      floating = F,
+      #size="\\fontsize{8pt}{10pt}\\selectfont",
+      #width="\\textwidth",
+      hline.after = c(-1,0)
+      )
+@
+
+\vspace*{-0.4cm}
+\section*{Tumor Sample Mapping Info}
+\vspace*{-0.5cm}
+<<samplemappingT, echo=FALSE, results='asis', warning=FALSE>>=
+qualimapStats <- qualimapStatsT
+
+mappingTable <- data.frame(
+                      Metric=c('Total reads',
+                               'Duplication rate',
+                               'Mapped reads',
+                               'Mapped reads inside of regions',
+                               'Mean Coverage',
+                               'Coverage 1x',
+                               'Coverage 10x',
+                               'Coverage 20x',
+                               'Coverage 50x',
+                               'GC Content'
+                               
+                      ),
+                      Value=c(round(qualimapStats$`Total Reads`/1000000,2),
+                              gsub('%',' (\\\\%)',qualimapStats$`Duplication Rate`),
+                              gsub('%',' (\\\\%)',qualimapStats$`Mapped reads, both in pair`),
+                              gsub('%',' (\\\\%)',qualimapStats$`Mapped reads, both in pair, inside of regions`),
+                              gsub(',', '', gsub('\\.[1-9]*', '', qualimapStats$`Mean Coverage`)),
+                              gsub('%',' (\\\\%)',qualimapStats$`1X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`10X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`20X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`50X`),
+                              gsub('%',' (\\\\%)',qualimapStats$`GC Content`)
+                      ),                      
+                     Expected=c('\\textgreater 200 (mio)',
+                                 '\\textless 50 (\\%)',
+                                 '\\textgreater 95 (\\%)',
+                                 '\\textgreater 75 (\\%)',
+                                 '\\textgreater 1000X',
+                                 '\\textgreater 99 (\\%)',
+                                 '\\textgreater 97 (\\%)',
+                                 '\\textgreater 95 (\\%)',
+                                 '\\textgreater 85 (\\%)',
+                                 '\\textless 52 (\\%)'
+                      ),
+                      QCPassed=NA
+                      )
+
+# check if qc passed
+mappingTable$QCPassed[1] <- ifelse(qualimapStats$`Total Reads`>=200000000, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+mappingTable$QCPassed[2] <- ifelse(as.numeric(gsub('%','',qualimapStats$`Duplication Rate`))<=50, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+mappingTable$QCPassed[3] <- ifelse(as.numeric(gsub('%','',qualimapStats$`Mapped reads, both in pair`))>=95, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[4] <- ifelse(as.numeric(gsub('%','',qualimapStats$`Mapped reads, both in pair, inside of regions`))>=75, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[5] <- ifelse(as.numeric(gsub('X', '', gsub(',', '', gsub('\\.', '', qualimapStats$`Mean Coverage`))))>=1000, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")    
+mappingTable$QCPassed[6] <- ifelse(as.numeric(gsub('%','',qualimapStats$`1X`))>=99, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[7] <- ifelse(as.numeric(gsub('%','',qualimapStats$`10X`))>=97, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[8] <- ifelse(as.numeric(gsub('%','',qualimapStats$`20X`))>=95, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[9] <- ifelse(as.numeric(gsub('%','',qualimapStats$`50X`))>=85, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+mappingTable$QCPassed[10] <- ifelse(as.numeric(gsub('%','',qualimapStats$`GC Content`))<52, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")  
+
+mapping.Table <- xtable(mappingTable)
+align(mapping.Table) <- "lp{5.5cm}p{3.5cm}p{3.5cm}x{2cm}"
+print(mapping.Table,
+      #align=c("c","c","c","c","c"),
+      include.rownames=FALSE,
+      type='latex',
+      sanitize.text.function = function(x) x,
+      latex.environments = "left",
+      tabular.environment = 'longtable',
+      floating = F,
+      #size="\\fontsize{8pt}{10pt}\\selectfont",
+      #width="\\textwidth",
+      hline.after = c(-1,0)
+      )
+@
+
+% Variant Calling Info
+\section*{Variant Calling Info}
+
+<<snpinfo, echo=FALSE>>=
+#snpinfoPanel <- "$\\\\square$" #ifelse(   >=90, "$\\\\text{\\\\color{red}{\\\\rlap{$\\\\checkmark$}}}\\\\square$", "$\\\\square$")
+@
+
+
+%\vspace*{-0.35cm}
+%\section*{Sample Variant Calling Info}
+%\vspace*{-0.5cm}
+%\begin{tabularx}{\textwidth}{  p{5.5cm} p{3.5cm} p{3.5cm} x{2cm} } \hline
+%Metric: & Value & Expected & QCPassed \tabularnewline \hline
+%SNP Panel Callable & \Sexpr{round((callableN/callableTotal)*100,1)} (\%) & > 90 (\%) & \Sexpr{print(snpinfoPanel)}
+%\end{tabularx}
+
+% begin of page 2 ...
+%\clearpage
+
+\section*{Sample Tracking}
+
+<<sampleTracking, echo=FALSE, results='asis'>>=
+  stTab <- st[,c(1,2,3,17)]
+  colnames(stTab) <- c('Sample', 'Type', 'Homozygous SNPs', 'Contamination')
+  stTab <- cbind(stTab, 
+                 Exspected=c('\\textless 1 (\\%)','\\textless 1 (\\%)'),
+                 QCPassed=NA
+                 )
+  stTab$QCPassed <- ifelse(stTab$Contamination  < 1, "$\\text{\\color{red}{\\rlap{$\\checkmark$}}}\\square$", "$\\square$")
+  stTab$Contamination <- paste(stTab$Contamination, '(\\%)')
+  
+  Rtab <- xtable(stTab, align=c("l","p{1.5cm}","p{1.5cm}","p{3cm}","p{3cm}","p{3.5cm}","p{2cm}"))
+
+  print(Rtab, 
+      include.rownames=FALSE,
+      type='latex',
+      sanitize.text.function = function(x) x,
+      latex.environments = "left",
+      tabular.environment = 'longtable',
+      floating = F,
+      #size="\\fontsize{8pt}{10pt}\\selectfont",
+      #width="\\textwidth",
+      hline.after = c(-1,0)
+      )
+@
+
+
+\section*{Software}
+
+\begin{tabbing}
+Reference Genome - Human (UCSC hg19) \= STAR Version 2.xx \\
+FastQC xyz \> Samtools 1.19.xx \\
+Picard xyz
+\end{tabbing}
+
+%\section*{Session Info}
+%
+%<<sessioninfo, echo=FALSE>>=
+%sessionInfo()
+%@
+
+%----------------------------------------------------------------------------------------
+
+\end{newlfm}
+
+\end{document}
