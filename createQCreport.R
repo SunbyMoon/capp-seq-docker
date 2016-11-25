@@ -52,12 +52,15 @@ option_list = list(
   make_option(c("--sample_tracking"), type="character", default=NULL, 
               help="sample tracking output from contest script", metavar="character"),
   make_option(c("--outdir"), type="character", default="~", 
-              help="output file path [default= %default]", metavar="character")
+              help="output file path [default= %default]", metavar="character"),
+  make_option(c("--scriptdir"), type="character", default="~",
+              help="script file path [default= %default]", metavar="character")
 )
 
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
 
+setwd(opt$scriptdir)
 ##
 packages(knitr)
 packages(yaml)

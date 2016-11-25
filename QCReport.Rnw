@@ -158,7 +158,7 @@ qualimapStatsB <- list(
 \begin{newlfm}
 
 %\ThisCenterWallPaper{1}{avera_letter.pdf}
-\CenterWallPaper{1}{../pdf/avera_letter.pdf}
+\CenterWallPaper{1}{avera_letter.pdf}
 
 %----------------------------------------------------------------------------------------
 %	Content

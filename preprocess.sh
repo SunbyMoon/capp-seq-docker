@@ -6,8 +6,13 @@ gsample=$2 #CCD333-B-DNA
 fastq=$3 #/data/s3/averafastq/patients/CCD333
 out=$4 #/data/storage/capp-seq/patients/CCD333
 envlist=$5 #/data/storage/capp-seq/panceq/CCD333.env.list
+script=$6 #/home/anu/capp-seq-docker
+qc_config=$7 #/home/anu/capp-seq-docker/sample_test.yaml
 
 sample=${tsample%%-*}
+id_tumor=${tsample#*-}
+id_blood=${gsample#*-}
+
 echo "tsample="$tsample >> $envlist
 echo "gsample="$gsample >> $envlist 
 echo "fastq_dir="$fastq >> $envlist 
@@ -19,9 +24,12 @@ echo "fastqc_dir="$out"/fastqc" >> $envlist
 echo "bbduk_dir="$out"/bbduk" >> $envlist
 echo "stats_dir="$out"/stats" >> $envlist
 echo "report_dir="$out"/report" >> $envlist
+echo "script_dir="$script >> $envlist
 echo -e "\n" >> $envlist 
 
 echo "sample="${tsample%%-*} >> $envlist
+echo "id_tumor="$id_tumor >> $envlist
+echo "id_blood="$id_blood >> $envlist 
 echo "cpu="$(grep -c "processor" /proc/cpuinfo) >> $envlist
 echo "bwa_index=/data/database/Homo_sapiens/UCSC/hg19/Sequence/BWAIndex/genome.fa" >> $envlist
 echo "temp_dir=/tmp" >> $envlist
@@ -93,6 +101,7 @@ echo "gqm_dir="$out"/qualimap/normal" >> $envlist
 echo "annovarout="$out"/vcf/"$sample"_vardict_somatic.annovar" >> $envlist
 echo "annovcf="$out"/vcf/"$sample"_vardict_somatic.annovar.hg19_multianno.vcf" >> $envlist
 echo "filtvcf="$out"/vcf/"$sample"_somatic_postfilter.vcf" >> $envlist
+echo "qc_config="$qc_config >> $envlist
 
 mkdir -p $out/alignment
 mkdir -p $out/vcf

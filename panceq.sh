@@ -114,8 +114,11 @@ echo -e "\e[0;36mFiltering CNVkit results \e[0m"
 docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript $cnvkit_filter $sample $cnvkitcns $cnvkitout'
 
 # Generate patient report
-#docker run -v /data:/data -v /tmp:/tmp -v /home:/home -i --env-file /home/anu/capp-seq-docker/env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/anu/capp-seq-docker/arep.R -a "$annovcf" -i "$sample" -o "$report_dir"'
-docker run -v /data:/data -v /tmp:/tmp -v /home:/home -i --env-file /data/storage/capp-seq/panceq/CCD347.env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/anu/capp-seq-docker/arep.R -v "$filtvcf" -C "$cnvkitout" -i "$sample" -o "$report_dir" -d /home/anu/capp-seq-docker'
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -i --env-file /home/anu/capp-seq-docker/env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/anu/capp-seq-docker/arep.R -a "$annovcf" -i "$sample" -o "$report_dir" -d $script_dir'
+#docker run -v /data:/data -v /tmp:/tmp -v /home:/home -i --env-file /data/storage/capp-seq/panceq/CCD347.env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/anu/capp-seq-docker/arep.R -v "$filtvcf" -C "$cnvkitout" -i "$sample" -o "$report_dir" -d /home/anu/capp-seq-docker'
+
+# Generate OC report
+docker run -v /data:/data -v /tmp:/tmp -v /home:/home -it --env-file /home/anu/capp-seq-docker/env.list bash -c 'Rscript --vanilla /home/anu/capp-seq-docker/createQCreport.R --fastqc $fastqc_dir --qualimap $qm_dir --id $sample --id_tumor $id_tumor --id_blood $id_blood --sample_config $qc_config --baseSpace_token 2434e39ec0774994a5ac22544cdca40f --sample_tracking $contout --outdir $report_dir --scriptdir $script_dir'
 
 echo -e "\e[0;36mDone! \e[0m"
 exit 0
