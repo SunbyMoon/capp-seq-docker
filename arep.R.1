@@ -36,8 +36,6 @@ packages <- function(x){
 packages(optparse)
 option_list = list(
   make_option(c("-v", "--vcf"), type="character", default=NULL, 
-              help="annovar annoted filtered somatic vardict vcf file", metavar="character"),
-  make_option(c("-r", "--raw"), type="character", default=NULL, 
               help="annovar annoted vardict vcf file", metavar="character"),
   make_option(c("-C", "--cnv"), type="character", default=NULL, 
               help="cnfkit output", metavar="character"),
@@ -92,7 +90,6 @@ MHmakeRandomString <- function(n=1, lenght=12)
 }
 
 vcf <- readVcf(opt$vcf, 'hg19')
-vcfraw <- readVcf(opt$raw, 'hg19')
 
 tab <- data.frame(Variant=names(ranges(vcf)),
                   Gene=unlist(lapply(info(vcf)$Gene.refGene, function(x) paste(x, collapse = ' '))),
@@ -210,47 +207,6 @@ if(any(names(opt)=='cnv')) {
   cnvtab <- cnvtab[order(cnvtab$Gene),]
 }
 
-# ---------------------------
-# pharm
-# data from https://github.com/AshleyLab/stmp
-pharm <- read.csv2('clinical_ann_metadata-snvs_canc.csv', sep=',', stringsAsFactors = F)
-
-vcf.pharm <- vcfraw[unlist(info(vcfraw)$snp142) %in% pharm$Location]
-pharmTab <- pharm[unlist(match(info(vcf.pharm)$snp142, pharm$Location)), c(2,4,5,13,9)]
-
-a1 <- vector()
-a2 <- vector()
-x1 <- granges(vcf.pharm)
-x2 <- geno(vcf.pharm)$GT[,2]
-x2 <- strsplit(x2, '/')
-for(i in 1:length(x2)) {
-  if(x2[[i]][1]==0 & x2[[i]][2]==0) {
-      a1[i] <- as.vector(x1[i]$REF)
-      a2[i] <- as.vector(x1[i]$REF)
-    } else if(x2[[i]][1]==0 & x2[[i]][2]==1) {
-      a1[i] <- as.vector(x1[i]$REF)
-      a2[i] <- as.vector(unlist(x1[i]$ALT))
-      } else if(x2[[i]][1]==1 & x2[[i]][2]==0) {
-        a1[i] <- as.vector(unlist(x1[i]$ALT))
-        a2[i] <- as.vector(x1[i]$REF)
-      } else if(x2[[i]][1]==1 & x2[[i]][2]==1) {
-        a1[i] <- as.vector(unlist(x1[i]$ALT))
-        a2[i] <- as.vector(unlist(x1[i]$ALT))
-        }
-}
-pharmTab$GenoType <- paste0(a1,a2)
-pharmTab$Gene <- unlist(info(vcf.pharm)$Gene.refGene)[match(pharmTab$Location, unlist(info(vcf.pharm)$snp142))]
-colnames(pharmTab) <- c('dbSNP', 'Evidence', 'Effect',
-                        'Disease', 'Variants', 'Genotype', 'Gene')
-pharmTab <- pharmTab[,c(7,1,3,2,6,5,4)]
-pharmTab$Effect <- gsub('/', ' \\\\newline ',pharmTab$Effect)
-pharmTab$Effect <- gsub(';', ' \\\\newline ',pharmTab$Effect)
-pharmTab$Disease <- gsub(';', ' \\\\newline ',pharmTab$Disease)
-
-# exclude evidence levels 3 & 4
-pharmTab <- subset(pharmTab, Evidence!='3' & Evidence!='4')
-
-#patient <- yaml.load_file(opt$sample_config)[[sampleID]]
 
 ## patient info
 patient <- list(

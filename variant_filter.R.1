@@ -1,12 +1,12 @@
 library(VariantAnnotation)
-#library(myvariant)
 
 args <- commandArgs(TRUE)
 infile = args[1] #/data/storage/capp-seq/patients/CCD010/vcf/CCD010_vardict_somatic.annovar_filt.hg19_multianno.vcf
 outfile = args[2] #/data/storage/capp-seq/patients/CCD010/vcf/CCD010_somatic_postfilter.vcf
 
-#vcfFile <- '~/AWS/storage/capp-seq/patients/CCD347/vcf/CCD347_vardict_somatic.annovar.hg19_multianno_refGene.vcf'
-#param <- ScanVcfParam(fixed="ALT")
+#infile <- "Desktop/AWS/storage/capp-seq/patients/CCD347/vcf/CCD347_vardict_somatic.annovar.hg19_multianno_refGene.vcf"
+#outfile <- "Desktop/AWS/storage/capp-seq/patients/CCD347/vcf/CCD347_somatic_postfilter_refGene.vcf"
+
 vcfFile <- infile
 vcf <- readVcf(vcfFile, 'hg19')
 
@@ -53,5 +53,10 @@ lq <- sapply(vcf, function(x) {
 
 vcf <- vcf[lq=='PASS']
 
-#writeVcf(vcf, '~/AWS/storage/capp-seq/patients/CCD347/vcf/CCD347_vardict_somatic_postfilter_refseq.vcf')
+
+#writeVcf(vcf, '/data/storage/capp-seq/patients/CCD010/vcf/CCD010_vardict_somatic.annovar.hg19_multianno_postfilter.vcf')
 writeVcf(vcf, outfile)
+
+
+
+
