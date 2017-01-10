@@ -190,6 +190,19 @@ RUN Rscript  -e 'install.packages("yaml")'
 RUN Rscript  -e 'install.packages("xtable")'
 RUN Rscript  -e 'install.packages("XML")'
 
+# extras
+ADD annotate_variation.pl /home/
+ADD convert2annovar.pl /home/
+ADD variant_filter.R /home/
+ADD clinical_ann_metadata-snvs_canc.csv /home/
+ADD createQCreport.R /home/
+ADD QCReport.Rnw /home/
+ADD longest_resfseq.txt /home/
+ADD longest_isoform.R /home/
+ADD BaseSpaceRunInfo.R /home/
+ADD cancer_genes.csv /home/
+ADD avera_letter.pdf /home/
+
 ##################### INSTALLATION END ##########################
 
 # File Author / Maintainer
