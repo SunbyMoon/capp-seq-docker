@@ -15,8 +15,8 @@
 #		    docker run -it anu9109/capp-seq java -jar /opt/software/abra.jar
 #################################################################
 
-# Set the base image to Ubuntu
-FROM ubuntu
+# Set the base image to Ubuntu 16.04
+FROM ubuntu:16.04
 
 ################## BEGIN INSTALLATION ###########################
 
@@ -52,6 +52,7 @@ RUN apt-get update && \
   libxml2-dev \
   python-pip \
   texlive-full \
+  nano \
   default-jre \ 
   default-jdk && \
   apt-get clean && \
@@ -91,8 +92,8 @@ RUN cd /opt/software/ && \
   rm /opt/software/sambamba_v0.6.3_linux.tar.bz2
 
 # install varscan-2.4.2 
-RUN cd /opt/software/ && \
-  git clone https://github.com/dkoboldt/varscan.git 
+#RUN cd /opt/software/ && \
+#  git clone https://github.com/dkoboldt/varscan.git 
 
 # install vcftools-0.1.14
 RUN  cd /opt/software/ && \
@@ -132,16 +133,14 @@ RUN Rscript -e "install.packages('optparse')"
 RUN Rscript  -e 'install.packages("dplyr")'
 RUN Rscript  -e 'install.packages("magrittr")'
 RUN Rscript  -e 'install.packages("knitr")'
+RUN Rscript  -e 'install.packages("httr")'
+RUN Rscript  -e 'install.packages("jsonlite")'
+RUN Rscript  -e 'install.packages("yaml")'
+RUN Rscript  -e 'install.packages("xtable")'
+RUN Rscript  -e 'install.packages("XML")'
 
 # install CNVkit
 RUN pip install --upgrade pip && pip install cnvkit
-
-# add cnvkit filtering script
-ADD cnvkit_filter.R /home/
-
-# add targets regions 
-ADD PANCeq_CNV_capture_targets_6.bed /home/
-ADD PANCeq_capture_targets_6.bed /home/
 
 # install VarDict
 RUN  cd /opt/software/ && \
@@ -171,26 +170,17 @@ RUN cd /opt/software/ && \
   tar -xvzf BBMap_36.32.tar.gz && \
   rm /opt/software/BBMap_36.32.tar.gz
 
-# add contamination check script and panel
-ADD cont.R /home/
-ADD contPanel.csv /home/
+ENV PATH=$PATH:/opt/software:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDictJava/build/install/VarDict/bin/:/opt/software/VarDictJava:/opt/software/FastQC:/opt/software/qualimap_v2.2:/home
 
-# add script to generate patient report
+# Add scripts and files to image
 ADD arep.R /home/
 ADD patientReport.Rnw /home/
-
-# install ANNOVAR
+ADD cont.R /home/
+ADD contPanel.csv /home/
+ADD cnvkit_filter.R /home/
+ADD PANCeq_CNV_capture_targets_6.bed /home/
+ADD PANCeq_capture_targets_6.bed /home/
 ADD table_annovar.pl /home/
-
-ENV PATH=$PATH:/opt/software:/opt/software/varscan:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDictJava/build/install/VarDict/bin/:/opt/software/VarDictJava:/opt/software/FastQC:/opt/software/qualimap_v2.2:/home
-
-RUN Rscript  -e 'install.packages("httr")'
-RUN Rscript  -e 'install.packages("jsonlite")'
-RUN Rscript  -e 'install.packages("yaml")'
-RUN Rscript  -e 'install.packages("xtable")'
-RUN Rscript  -e 'install.packages("XML")'
-
-# extras
 ADD annotate_variation.pl /home/
 ADD convert2annovar.pl /home/
 ADD variant_filter.R /home/

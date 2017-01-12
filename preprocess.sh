@@ -5,13 +5,17 @@ tsample=$1 #CCD333-T-DNA
 gsample=$2 #CCD333-B-DNA
 fastq=$3 #/data/s3/averafastq/patients/CCD333
 out=$4 #/data/storage/capp-seq/patients/CCD333
-envlist=$5 #/data/storage/capp-seq/panceq/CCD333.env.list
-script=$6 #/home/anu/capp-seq-docker
-qc_config=$7 #/home/anu/capp-seq-docker/sample_test.yaml
+repo=$5 #/home/anu/capp-seq-docker
+
+#envlist=$5 #/data/storage/capp-seq/panceq/CCD333.env.list
+#script=$6 #/home/anu/capp-seq-docker
+#qc_config=$7 #/home/anu/capp-seq-docker/sample_test.yaml
 
 sample=${tsample%%-*}
 id_tumor=${tsample#*-}
 id_blood=${gsample#*-}
+envlist=$out/$sample.env.list
+qc_config=$out/$sample.yaml
 
 echo "tsample="$tsample >> $envlist
 echo "gsample="$gsample >> $envlist 
@@ -24,7 +28,7 @@ echo "fastqc_dir="$out"/fastqc" >> $envlist
 echo "bbduk_dir="$out"/bbduk" >> $envlist
 echo "stats_dir="$out"/stats" >> $envlist
 echo "report_dir="$out"/report" >> $envlist
-echo "script_dir="$script >> $envlist
+#echo "script_dir="$script >> $envlist
 echo -e "\n" >> $envlist 
 
 echo "sample="${tsample%%-*} >> $envlist
@@ -34,10 +38,10 @@ echo "cpu="$(grep -c "processor" /proc/cpuinfo) >> $envlist
 echo "bwa_index=/data/database/Homo_sapiens/UCSC/hg19/Sequence/BWAIndex/genome.fa" >> $envlist
 echo "temp_dir=/tmp" >> $envlist
 echo "regions=/data/database/avera/CAPPSeq_Avera_capture_targets_6.bed" >> $envlist #image
-echo "cont=/home/anu/capp-seq-docker/cont.R" >> $envlist #image
-echo "contpanel=/home/anu/capp-seq-docker/contPanel.csv" >> $envlist #image
-echo "cnvkit_filter=/home/anu/capp-seq-docker/cnvkit_filter.R" >> $envlist #image
-echo "cnvkit_regions=/home/anu/capp-seq-docker/PANCeq_CNV_capture_targets_6.bed" >> $envlist #image
+#echo "cont=/home/anu/capp-seq-docker/cont.R" >> $envlist #image
+#echo "contpanel=/home/anu/capp-seq-docker/contPanel.csv" >> $envlist #image
+#echo "cnvkit_filter=/home/anu/capp-seq-docker/cnvkit_filter.R" >> $envlist #image
+#echo "cnvkit_regions=/home/anu/capp-seq-docker/PANCeq_CNV_capture_targets_6.bed" >> $envlist #image
 echo "annodb=/data/database/annovar" >> $envlist
 echo -e "\n" >> $envlist 
 
@@ -86,21 +90,21 @@ echo -e "\n" >> $envlist
 #echo "outvcfindelhc="$out"/vcf/"$sample"_varscan_somatic.indel.Somatic.hc.vcf" >> $envlist #varscan
 #echo "outvcf="$out"/vcf/"$sample"_varscan_somatic.vcf" >> $envlist #varscan
 #echo "outvcfgz="$out"/vcf/"$sample"_varscan_somatic.vcf.gz" >> $envlist #varscan
+echo "outvardict="$out"/vcf/"$sample"_vardict_somatic.vcf" >> $envlist
 echo "outvardict="$out"/vcf/"$sample"_vardict_somatic.vcf.gz" >> $envlist
+echo "annovarout="$out"/vcf/"$sample"_vardict_somatic.annovar" >> $envlist
+echo "annovcf="$out"/vcf/"$sample"_vardict_somatic.annovar.hg19_multianno.vcf" >> $envlist
+echo "filtvcf="$out"/vcf/"$sample"_somatic_postfilter.vcf" >> $envlist
 echo -e "\n" >> $envlist
 
 echo "refcnvkit="$out"/cnv/"$sample"_ref.cnn" >> $envlist
 echo "cnvkitcns="$out"/cnv/"$tsample"_realigned_sorted.cns" >> $envlist
 echo "cnvkitout="$out"/cnv/"$sample".cnvkit.out" >> $envlist
+echo -e "\n" >> $envlist
 
 echo "contout="$out"/report/"$sample".contamination.out" >> $envlist
 echo "tqm_dir="$out"/qualimap/tumor" >> $envlist
 echo "gqm_dir="$out"/qualimap/normal" >> $envlist
-#echo "tqmout="$tsample"_qualimap" >> $envlist
-#echo "gqmout="$gsample"_qualimap" >> $envlist
-echo "annovarout="$out"/vcf/"$sample"_vardict_somatic.annovar" >> $envlist
-echo "annovcf="$out"/vcf/"$sample"_vardict_somatic.annovar.hg19_multianno.vcf" >> $envlist
-echo "filtvcf="$out"/vcf/"$sample"_somatic_postfilter.vcf" >> $envlist
 echo "qc_config="$qc_config >> $envlist
 
 mkdir -p $out/alignment
@@ -112,6 +116,7 @@ mkdir -p $out/bbduk
 mkdir -p $out/stats
 mkdir -p $out/report
 
-#sed -e 's|'/home/anu/capp-seq-docker/test.env.list'|'$envlist'|g' panceq.sh
-#bash panceq.sh
+#sed -e 's|'/home/anu/capp-seq-docker/test.env.list'|'$envlist'|g' $repo/panceq.sh > $out/$sample.panceq.sh
+#sed -e "1s/.*/$sample:/" $repo/sample_test.yaml > $out/$sample.yaml
+#bash $out/$sample.panceq.sh
 
