@@ -62,6 +62,7 @@ echo "tqhist="$out"/stats/"$tsample".qhist" >> $envlist
 echo "taqhist="$out"/stats/"$tsample".aqhist" >> $envlist
 echo "tlhist="$out"/stats/"$tsample".lhist" >> $envlist
 echo "tgchist="$out"/stats/"$tsample".gchist" >> $envlist
+echo "tqm_dir="$out"/qualimap/tumor" >> $envlist
 echo -e "\n" >> $envlist 
 
 echo "ginfastq1="$fastq"/"$gsample"_1.fastq.gz" >> $envlist
@@ -81,6 +82,7 @@ echo "gqhist="$out"/stats/"$gsample".qhist" >> $envlist
 echo "gaqhist="$out"/stats/"$gsample".aqhist" >> $envlist
 echo "glhist="$out"/stats/"$gsample".lhist" >> $envlist
 echo "ggchist="$out"/stats/"$gsample".gchist" >> $envlist
+echo "gqm_dir="$out"/qualimap/normal" >> $envlist
 echo -e "\n" >> $envlist 
 
 #echo "outsom="$out"/vcf/"$sample"_varscan_somatic" >> $envlist #varscan
@@ -91,7 +93,7 @@ echo -e "\n" >> $envlist
 #echo "outvcf="$out"/vcf/"$sample"_varscan_somatic.vcf" >> $envlist #varscan
 #echo "outvcfgz="$out"/vcf/"$sample"_varscan_somatic.vcf.gz" >> $envlist #varscan
 echo "outvardict="$out"/vcf/"$sample"_vardict_somatic.vcf" >> $envlist
-echo "outvardict="$out"/vcf/"$sample"_vardict_somatic.vcf.gz" >> $envlist
+echo "outvardictgz="$out"/vcf/"$sample"_vardict_somatic.vcf.gz" >> $envlist
 echo "annovarout="$out"/vcf/"$sample"_vardict_somatic.annovar" >> $envlist
 echo "annovcf="$out"/vcf/"$sample"_vardict_somatic.annovar.hg19_multianno.vcf" >> $envlist
 echo "filtvcf="$out"/vcf/"$sample"_somatic_postfilter.vcf" >> $envlist
@@ -103,20 +105,19 @@ echo "cnvkitout="$out"/cnv/"$sample".cnvkit.out" >> $envlist
 echo -e "\n" >> $envlist
 
 echo "contout="$out"/report/"$sample".contamination.out" >> $envlist
-echo "tqm_dir="$out"/qualimap/tumor" >> $envlist
-echo "gqm_dir="$out"/qualimap/normal" >> $envlist
 echo "qc_config="$qc_config >> $envlist
 
 mkdir -p $out/alignment
 mkdir -p $out/vcf
 mkdir -p $out/cnv
-mkdir -p $out/qm
+mkdir -p $out/qualimap/tumor
+mkdir -p $out/qualimap/normal
 mkdir -p $out/fastqc
 mkdir -p $out/bbduk
 mkdir -p $out/stats
 mkdir -p $out/report
 
-#sed -e 's|'/home/anu/capp-seq-docker/test.env.list'|'$envlist'|g' $repo/panceq.sh > $out/$sample.panceq.sh
-#sed -e "1s/.*/$sample:/" $repo/sample_test.yaml > $out/$sample.yaml
+sed -e 's|'/home/anu/capp-seq-docker/env.list'|'$envlist'|g' $repo/panceq.sh > $out/$sample.panceq.sh
+sed -e "1s/.*/$sample:/" $repo/sample_test.yaml > $out/$sample.yaml
 #bash $out/$sample.panceq.sh
 

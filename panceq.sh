@@ -123,7 +123,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run CNVkit
 echo -e "\e[0;36mRunning CNVkit \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -v /home:/home -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam \ 
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam \ 
 --targets /home/PANCeq_CNV_capture_targets_6.bed --fasta $bwa_index --split --output-reference $refcnvkit --output-dir $cnv_dir --scatter'
 
 # Run CNVkit filter
@@ -135,14 +135,14 @@ echo -e "\e[0;36mCreating patient report \e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/arep.R -v $filtvcf -r $annovcf -C $cnvkitout -i $sample \ 
 -o $report_dir -d /home'
 
-# Generate OC report
+# Generate QC report
 echo -e "\e[0;36mCreating QC report \e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript --vanilla /home/createQCreport.R --fastqc $fastqc_dir --qualimap $qm_dir --id $sample \ 
 --id_tumor $id_tumor --id_blood $id_blood --sample_config $qc_config --baseSpace_token 2434e39ec0774994a5ac22544cdca40f --sample_tracking $contout --outdir $report_dir --scriptdir /home'
 
 # Cleaning temp folder
 echo -e "\e[0;36mCleaning /tmp space used by Abra \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'rm -r $ttmpabra; rm -r gtmpabra;rm /tmp/$tsample*; rm /tmp/$gsample*'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'rm -r $ttmpabra; rm -r $gtmpabra;rm /tmp/$tsample*; rm /tmp/$gsample*'
 
 echo -e "\e[0;36mDone! \e[0m"
 exit 0
