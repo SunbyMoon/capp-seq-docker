@@ -70,11 +70,9 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run Qualimap
 echo -e "\e[0;36mRunning Qualimap on tumor bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed \ 
--bam $toutbam -outdir $tqm_dir --outformat HTML'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed -bam $toutbam -outdir $tqm_dir --outformat HTML'
 echo -e "\e[0;36mRunning Qualimap on normal bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed \ 
--bam $goutbam -outdir $gqm_dir --outformat HTML'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed -bam $goutbam -outdir $gqm_dir --outformat HTML'
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
