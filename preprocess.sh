@@ -7,16 +7,14 @@ fastq=$3 #/data/s3/averafastq/patients/CCD333
 out=$4 #/data/storage/capp-seq/patients/CCD333
 repo=$5 #/home/anu/capp-seq-docker
 
-#envlist=$5 #/data/storage/capp-seq/panceq/CCD333.env.list
-#script=$6 #/home/anu/capp-seq-docker
-#qc_config=$7 #/home/anu/capp-seq-docker/sample_test.yaml
-
+#Variables
 sample=${tsample%%-*}
 id_tumor=${tsample#*-}
 id_blood=${gsample#*-}
 envlist=$out/$sample.env.list
 qc_config=$out/$sample.yaml
 
+# env.list
 echo "tsample="$tsample >> $envlist
 echo "gsample="$gsample >> $envlist 
 echo "fastq_dir="$fastq >> $envlist 
@@ -28,7 +26,6 @@ echo "fastqc_dir="$out"/fastqc" >> $envlist
 echo "bbduk_dir="$out"/bbduk" >> $envlist
 echo "stats_dir="$out"/stats" >> $envlist
 echo "report_dir="$out"/report" >> $envlist
-#echo "script_dir="$script >> $envlist
 echo -e "\n" >> $envlist 
 
 echo "sample="${tsample%%-*} >> $envlist
@@ -38,10 +35,6 @@ echo "cpu="$(grep -c "processor" /proc/cpuinfo) >> $envlist
 echo "bwa_index=/data/database/Homo_sapiens/UCSC/hg19/Sequence/BWAIndex/genome.fa" >> $envlist
 echo "temp_dir=/tmp" >> $envlist
 echo "regions=/data/database/avera/CAPPSeq_Avera_capture_targets_6.bed" >> $envlist #image
-#echo "cont=/home/anu/capp-seq-docker/cont.R" >> $envlist #image
-#echo "contpanel=/home/anu/capp-seq-docker/contPanel.csv" >> $envlist #image
-#echo "cnvkit_filter=/home/anu/capp-seq-docker/cnvkit_filter.R" >> $envlist #image
-#echo "cnvkit_regions=/home/anu/capp-seq-docker/PANCeq_CNV_capture_targets_6.bed" >> $envlist #image
 echo "annodb=/data/database/annovar" >> $envlist
 echo -e "\n" >> $envlist 
 
@@ -54,7 +47,6 @@ echo "ttmprealnbam=/tmp/"$tsample"_realigned.bam" >> $envlist
 echo "ttmpabra=/tmp/"$tsample"_abra" >> $envlist
 echo "ttmpabralog=/tmp/"$tsample"_abra.log" >> $envlist
 echo "toutbam="$out"/alignment/"$tsample"_realigned_sorted.bam" >> $envlist
-#echo "tpileup="$out"/alignment/"$tsample".flt.pileup" >> $envlist #varscan
 echo "tfastq1="$out"/bbduk/"$tsample"_1.fastq.gz" >> $envlist
 echo "tfastq2="$out"/bbduk/"$tsample"_2.fastq.gz" >> $envlist
 echo "tbhist="$out"/stats/"$tsample".bhist" >> $envlist
@@ -74,7 +66,6 @@ echo "gtmprealnbam=/tmp/"$gsample"_realigned.bam" >> $envlist
 echo "gtmpabra=/tmp/"$gsample"_abra" >> $envlist
 echo "gtmpabralog=/tmp/"$gsample"_abra.log" >> $envlist
 echo "goutbam="$out"/alignment/"$gsample"_realigned_sorted.bam" >> $envlist
-#echo "gpileup="$out"/alignment/"$gsample".flt.pileup" >> $envlist #varscan
 echo "gfastq1="$out"/bbduk/"$gsample"_1.fastq.gz" >> $envlist
 echo "gfastq2="$out"/bbduk/"$gsample"_2.fastq.gz" >> $envlist
 echo "gbhist="$out"/stats/"$gsample".bhist" >> $envlist
@@ -85,13 +76,6 @@ echo "ggchist="$out"/stats/"$gsample".gchist" >> $envlist
 echo "gqm_dir="$out"/qualimap/normal" >> $envlist
 echo -e "\n" >> $envlist 
 
-#echo "outsom="$out"/vcf/"$sample"_varscan_somatic" >> $envlist #varscan
-#echo "outvcfsnp="$out"/vcf/"$sample"_varscan_somatic.snp.vcf" >> $envlist #varscan
-#echo "outvcfindel="$out"/vcf/"$sample"_varscan_somatic.indel.vcf" >> $envlist #varscan
-#echo "outvcfsnphc="$out"/vcf/"$sample"_varscan_somatic.snp.Somatic.hc.vcf" >> $envlist #varscan
-#echo "outvcfindelhc="$out"/vcf/"$sample"_varscan_somatic.indel.Somatic.hc.vcf" >> $envlist #varscan
-#echo "outvcf="$out"/vcf/"$sample"_varscan_somatic.vcf" >> $envlist #varscan
-#echo "outvcfgz="$out"/vcf/"$sample"_varscan_somatic.vcf.gz" >> $envlist #varscan
 echo "outvardict="$out"/vcf/"$sample"_vardict_somatic.vcf" >> $envlist
 echo "outvardictgz="$out"/vcf/"$sample"_vardict_somatic.vcf.gz" >> $envlist
 echo "annovarout="$out"/vcf/"$sample"_vardict_somatic.annovar" >> $envlist

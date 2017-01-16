@@ -70,39 +70,15 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run Qualimap
 echo -e "\e[0;36mRunning Qualimap on tumor bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_CNV_capture_targets_6.bed \ 
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed \ 
 -bam $toutbam -outdir $tqm_dir --outformat HTML'
 echo -e "\e[0;36mRunning Qualimap on normal bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_CNV_capture_targets_6.bed \ 
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed \ 
 -bam $goutbam -outdir $gqm_dir --outformat HTML'
-
-# Create pileup 
-#echo -e "\e[0;36mCreating tumor pileup\e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'samtools mpileup -f $bwa_index -l /home/PANCeq_CNV_capture_targets_6.bed --output $tpileup $toutbam'
-#echo -e "\e[0;36mCreating normal pileup\e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'samtools mpileup -f $bwa_index -l /home/PANCeq_CNV_capture_targets_6.bed --output $gpileup $goutbam'
-
-# Call variants
-#echo -e "\e[0;36mCalling somatic variants\e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'java -jar /opt/software/varscan/VarScan.v2.4.2.jar somatic $gpileup $tpileup $outsom \ 
-#--min-var-freq 0.01 --output-vcf 1'
-
-# Process variant output
-#echo -e "\e[0;36mCreating SNP VCF\e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'java -jar /opt/software/varscan/VarScan.v2.4.2.jar processSomatic $outvcfsnp'
-#echo -e "\e[0;36mCreating indel VCF\e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'java -jar /opt/software/varscan/VarScan.v2.4.2.jar processSomatic $outvcfindel'
-#echo -e "\e[0;36mCombining SNP and indel VCF\e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'vcfcombine $outvcfsnphc $outvcfindelhc > $outvcf'
-#echo -e "\e[0;36mCreating compressed VCF\e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bgzip -f $outvcf'
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'tabix -f -p vcf $outvcfgz'
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" \ 
--c 1 -S 2 -E 3 -g 4 /home/PANCeq_CNV_capture_targets_6.bed | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" \ 
--f 0.01 -P 0.9 -m 4.25 > $outvardict'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 /home/PANCeq_CNV_capture_targets_6.bed | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
 
 echo -e "\e[0;36mCreating compressed VCF\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bgzip -f $outvardict'
@@ -110,8 +86,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Annotate VarDict VCF with Annovar
 echo -e "\e[0;36mAnnotating variants with Annovar\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl /home/table_annovar.pl $outvardictgz $annodb -buildver hg19 -out $annovarout \ 
--protocol refGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl /home/table_annovar.pl $outvardictgz $annodb -buildver hg19 -out $annovarout -protocol refGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
 
 # Filter variants
 echo -e "\e[0;36mFiltering variants\e[0m"
@@ -123,8 +98,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run CNVkit
 echo -e "\e[0;36mRunning CNVkit \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam \ 
---targets /home/PANCeq_CNV_capture_targets_6.bed --fasta $bwa_index --split --output-reference $refcnvkit --output-dir $cnv_dir --scatter'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam --targets /home/PANCeq_CNV_capture_targets_6.bed --fasta $bwa_index --split --output-reference $refcnvkit --output-dir $cnv_dir --scatter'
 
 # Run CNVkit filter
 echo -e "\e[0;36mFiltering CNVkit results \e[0m"
@@ -132,13 +106,11 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Generate patient report
 echo -e "\e[0;36mCreating patient report \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/arep.R -v $filtvcf -r $annovcf -C $cnvkitout -i $sample \ 
--o $report_dir -d /home'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list  anu9109/capp-seq bash -c 'Rscript --vanilla /home/arep.R -v $filtvcf -r $annovcf -C $cnvkitout -i $sample -o $report_dir -d /home'
 
 # Generate QC report
 echo -e "\e[0;36mCreating QC report \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript --vanilla /home/createQCreport.R --fastqc $fastqc_dir --qualimap $qm_dir --id $sample \ 
---id_tumor $id_tumor --id_blood $id_blood --sample_config $qc_config --baseSpace_token 2434e39ec0774994a5ac22544cdca40f --sample_tracking $contout --outdir $report_dir --scriptdir /home'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript --vanilla /home/createQCreport.R --fastqc $fastqc_dir --qualimap $qm_dir --id $sample --id_tumor $id_tumor --id_blood $id_blood --sample_config $qc_config --baseSpace_token 2434e39ec0774994a5ac22544cdca40f --sample_tracking $contout --outdir $report_dir --scriptdir /home'
 
 # Cleaning temp folder
 echo -e "\e[0;36mCleaning /tmp space used by Abra \e[0m"
