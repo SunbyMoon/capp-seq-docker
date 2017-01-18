@@ -1,18 +1,10 @@
 #################################################################
 # Dockerfile
 #
-# Description:      Docker container with BWA-0.7.15 | samtools-1.3 | sambamba-0.6.3 | varscan-2.4.2 | samblaster-0.1.22 | abra-0.97 | vcftools-0.1.14 | vcflib-1.0.0-rc1 to call variants from deep sequencing (CAPP-Seq) data.
-# Base Image:       ubuntu
+# Description:      Docker image for Avera Cancer Institute's PANCeq pipeline to call variants and CNVs from targeted deep sequencing data. 
+# Base Image:       ubuntu:16.04
 # Pull Cmd:         docker pull anu9109/capp-seq
 # Run Cmd:          docker run -it anu9109/capp-seq
-# Run tools as:     docker run -it anu9109/capp-seq bwa 
-#		    docker run -it anu9109/capp-seq samtools 
-#		    docker run -it anu9109/capp-seq sambamba 
-#		    docker run -it anu9109/capp-seq java -jar /opt/software/varscan/VarScan.v2.4.2.jar
-#		    docker run -it anu9109/capp-seq samblaster
-#	    	    docker run -it anu9109/capp-seq vcftools
-#		    docker run -it anu9109/capp-seq vcfcombine (or any vcflib command)
-#		    docker run -it anu9109/capp-seq java -jar /opt/software/abra.jar
 #################################################################
 
 # Set the base image to Ubuntu 16.04
@@ -91,11 +83,7 @@ RUN cd /opt/software/ && \
   mv /opt/software/sambamba_v0.6.3 /opt/software/sambamba && \
   rm /opt/software/sambamba_v0.6.3_linux.tar.bz2
 
-# install varscan-2.4.2 
-#RUN cd /opt/software/ && \
-#  git clone https://github.com/dkoboldt/varscan.git 
-
-# install vcftools-0.1.14
+# install vcftools-0.1.14 (latest version)
 RUN  cd /opt/software/ && \
   git clone https://github.com/vcftools/vcftools.git && \
   cd /opt/software/vcftools && \
@@ -104,7 +92,7 @@ RUN  cd /opt/software/ && \
   make && \
   make install
 
-# install vcflib-1.0.0-rc1
+# install vcflib-1.0.0-rc1 (latest version)
 RUN  cd /opt/software/ && \
   git clone --recursive https://github.com/vcflib/vcflib.git && \
   cd /opt/software/vcflib && \
@@ -115,34 +103,34 @@ RUN  cd /opt/software/ && \
   wget https://github.com/mozack/abra/releases/download/v0.97/abra-0.97-SNAPSHOT-jar-with-dependencies.jar && \
   mv /opt/software/abra-0.97-SNAPSHOT-jar-with-dependencies.jar /opt/software/abra.jar
 
-# install samblaster-0.1.22
+# install samblaster-0.1.22 (latest version)
 RUN  cd /opt/software/ && \
   git clone git://github.com/GregoryFaust/samblaster.git && \
   cd /opt/software/samblaster && \
   make
 
-# install R packages
+# install R & R packages
 RUN wget https://cran.r-project.org/src/base/R-3/R-3.3.0.tar.gz && tar -zxvf R-3.3.0.tar.gz && cd R-3.3.0 && ./configure && make && make install && rm -r /R-3.3.0.tar.gz
 RUN echo "local({r <- getOption('repos'); r['CRAN'] <- 'https://cran.cnr.berkeley.edu'; options(repos=r)})" > ~/.Rprofile
 RUN Rscript -e 'source("http://bioconductor.org/biocLite.R")' \ 
   -e 'biocLite("Rsamtools")' \
   -e 'biocLite("VariantAnnotation")' \
   -e 'biocLite("GenomicRanges")'
-RUN Rscript  -e 'install.packages("plyr")'
+RUN Rscript -e 'install.packages("plyr")'
 RUN Rscript -e "install.packages('optparse')"
-RUN Rscript  -e 'install.packages("dplyr")'
-RUN Rscript  -e 'install.packages("magrittr")'
-RUN Rscript  -e 'install.packages("knitr")'
-RUN Rscript  -e 'install.packages("httr")'
-RUN Rscript  -e 'install.packages("jsonlite")'
-RUN Rscript  -e 'install.packages("yaml")'
-RUN Rscript  -e 'install.packages("xtable")'
-RUN Rscript  -e 'install.packages("XML")'
+RUN Rscript -e 'install.packages("dplyr")'
+RUN Rscript -e 'install.packages("magrittr")'
+RUN Rscript -e 'install.packages("knitr")'
+RUN Rscript -e 'install.packages("httr")'
+RUN Rscript -e 'install.packages("jsonlite")'
+RUN Rscript -e 'install.packages("yaml")'
+RUN Rscript -e 'install.packages("xtable")'
+RUN Rscript -e 'install.packages("XML")'
 
-# install CNVkit
+# install CNVkit (latest version)
 RUN pip install --upgrade pip && pip install cnvkit
 
-# install VarDict
+# install VarDict (latest version)
 RUN  cd /opt/software/ && \
   git clone --recursive https://github.com/AstraZeneca-NGS/VarDictJava.git && \
   cd VarDictJava/ && \
