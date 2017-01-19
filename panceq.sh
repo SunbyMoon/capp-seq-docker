@@ -53,10 +53,10 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 # Indel realignment with Abra (Note: Add clean up step)
 echo -e "\e[0;36mPerforming indel realignment on tumor BAM\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'java -Xmx16G -jar /opt/software/abra.jar --in $ttmpdedupbam --out $ttmprealnbam \
---ref $bwa_index --targets /home/PANCeq_CNV_capture_targets_6.bed --threads $cpu --working $ttmpabra > $ttmpabralog 2>&1'
+--ref $bwa_index --targets /home/PANCeq_capture_targets_6.bed --threads $cpu --working $ttmpabra > $ttmpabralog 2>&1'
 echo -e "\e[0;36mPerforming indel realignment on normal BAM\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'java -Xmx16G -jar /opt/software/abra.jar --in $gtmpdedupbam --out $gtmprealnbam \
---ref $bwa_index --targets /home/PANCeq_CNV_capture_targets_6.bed --threads $cpu --working $gtmpabra > $gtmpabralog 2>&1'
+--ref $bwa_index --targets /home/PANCeq_capture_targets_6.bed --threads $cpu --working $gtmpabra > $gtmpabralog 2>&1'
 
 # Sort and index re-aligned bam file (Note: Add clean up step)
 echo -e "\e[0;36mSorting re-aligned tumor BAM\e[0m"
@@ -76,7 +76,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 /home/PANCeq_CNV_capture_targets_6.bed | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 /home/PANCeq_capture_targets_6.bed | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
 
 echo -e "\e[0;36mCreating compressed VCF\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bgzip -f $outvardict'
