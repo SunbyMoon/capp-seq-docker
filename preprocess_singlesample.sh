@@ -3,9 +3,9 @@
 #Arguments 
 sample=$1 #CCD333-T-DNA
 #gsample=$2 #CCD333-B-DNA
-fastq=$3 #/data/s3/averafastq/patients/CCD333
-out=$4 #/data/storage/capp-seq/patients/CCD333
-repo=$5 #/home/anu/capp-seq-docker
+fastq=$2 #/data/s3/averafastq/patients/CCD333
+out=$3 #/data/storage/capp-seq/patients/CCD333
+repo=$4 #/home/anu/capp-seq-docker
 
 #Variables
 #sample=${tsample%%-*}
