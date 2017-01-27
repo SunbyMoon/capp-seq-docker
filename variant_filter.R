@@ -13,6 +13,8 @@ vcf <- readVcf(vcfFile, 'hg19')
 # remove germline
 vcf <- vcf[info(vcf)$STATUS!='Germline']
 
+vcf <- vcf[fixed(vcf)$FILTER=='PASS']
+
 # only exonic regions
 vcf <- vcf[unlist(info(vcf)$Func.refGene)=='exonic' | unlist(info(vcf)$Func.refGene)=='splicing']
 
