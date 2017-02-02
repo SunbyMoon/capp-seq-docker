@@ -167,7 +167,7 @@ ADD cont.R /home/
 ADD contPanel.csv /home/
 ADD cnvkit_filter.R /home/
 ADD PANCeq_CNV_capture_targets_6.bed /home/
-ADD PANCeq_capture_targets_6.bed /home/
+ADD PANCeq_C200X50bp_6.bed /home/
 ADD table_annovar.pl /home/
 ADD annotate_variation.pl /home/
 ADD convert2annovar.pl /home/

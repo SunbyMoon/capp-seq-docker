@@ -53,10 +53,10 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 # Indel realignment with Abra (Note: Add clean up step)
 echo -e "\e[0;36mPerforming indel realignment on tumor BAM\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'java -Xmx16G -jar /opt/software/abra.jar --in $ttmpdedupbam --out $ttmprealnbam \
---ref $bwa_index --targets /home/PANCeq_capture_targets_6.bed --threads $cpu --working $ttmpabra > $ttmpabralog 2>&1'
+--ref $bwa_index --targets $regions --threads $cpu --working $ttmpabra > $ttmpabralog 2>&1'
 echo -e "\e[0;36mPerforming indel realignment on normal BAM\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'java -Xmx16G -jar /opt/software/abra.jar --in $gtmpdedupbam --out $gtmprealnbam \
---ref $bwa_index --targets /home/PANCeq_capture_targets_6.bed --threads $cpu --working $gtmpabra > $gtmpabralog 2>&1'
+--ref $bwa_index --targets $regions --threads $cpu --working $gtmpabra > $gtmpabralog 2>&1'
 
 # Sort and index re-aligned bam file (Note: Add clean up step)
 echo -e "\e[0;36mSorting re-aligned tumor BAM\e[0m"
@@ -70,9 +70,9 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run Qualimap
 echo -e "\e[0;36mRunning Qualimap on tumor bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed -bam $toutbam -outdir $tqm_dir --outformat HTML'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff $regions -bam $toutbam -outdir $tqm_dir --outformat HTML'
 echo -e "\e[0;36mRunning Qualimap on normal bam \e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff /home/PANCeq_capture_targets_6.bed -bam $goutbam -outdir $gqm_dir --outformat HTML'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'qualimap bamqc --java-mem-size=10G -gd HUMAN -sd -gff $regions -bam $goutbam -outdir $gqm_dir --outformat HTML'
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
