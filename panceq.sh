@@ -6,11 +6,11 @@ docker pull anu9109/capp-seq
 echo -e "\e[0;36mRunning bbduk trimming on tumor bam \e[0m"
 docker run -v /data:/data -v /tmp:/tmp  -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c './opt/software/bbmap/bbduk.sh in=$tinfastq1 in2=$tinfastq2 out=$tfastq1 out2=$tfastq2 \ 
 ref=/opt/software/bbmap/resources/truseq.fa.gz stats=$tstats bhist=$tbhist qhist=$tqhist aqhist=$taqhist lhist=$tlhist gchist=$tgchist gcbins=auto threads=$cpu minlen=25 qtrim=rl trimq=10 ktrim=r k=25 \ 
-mink=11 hdist=1 overwrite=true tbo=t tpe=t -Xmx4g'
+mink=11 hdist=1 overwrite=true tbo=t tpe=t'
 echo -e "\e[0;36mRunning bbduk trimming on normal bam \e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c './opt/software/bbmap/bbduk.sh in=$ginfastq1 in2=$ginfastq2 out=$gfastq1 out2=$gfastq2 \
 ref=/opt/software/bbmap/resources/truseq.fa.gz stats=$gstats bhist=$gbhist qhist=$gqhist aqhist=$gaqhist lhist=$glhist gchist=$ggchist gcbins=auto threads=$cpu minlen=25 qtrim=rl trimq=10 ktrim=r k=25 \
-mink=11 hdist=1 overwrite=true tbo=t tpe=t -Xmx4g'
+mink=11 hdist=1 overwrite=true tbo=t tpe=t'
 
 # Run FastQC
 echo -e "\e[0;36mRunning FastQC \e[0m"
@@ -76,7 +76,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 /home/PANCeq_capture_targets_6.bed | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -c 1 -S 2 -E 3 -g 4 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
 
 echo -e "\e[0;36mCreating compressed VCF\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bgzip -f $outvardict'
