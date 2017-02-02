@@ -34,7 +34,7 @@ echo "id_blood="$id_blood >> $envlist
 echo "cpu="$(grep -c "processor" /proc/cpuinfo) >> $envlist
 echo "bwa_index=/data/database/Homo_sapiens/UCSC/hg19/Sequence/BWAIndex/genome.fa" >> $envlist
 echo "temp_dir=/tmp" >> $envlist
-echo "regions=/data/database/avera/CAPPSeq_Avera_capture_targets_6.bed" >> $envlist #image
+echo "regions=/data/database/avera/PANCeq_C200X50bp_6.bed" >> $envlist #image
 echo "annodb=/data/database/annovar" >> $envlist
 echo -e "\n" >> $envlist 
 
