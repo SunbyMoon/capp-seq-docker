@@ -60,6 +60,11 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 echo -e "\e[0;36mCleaning /tmp space used by Abra \e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'rm -r $tmpabra; rm /tmp/$sample*'
 
+# Docker cleanup
+echo -e "\e[0;36mRemoving unused Docker containers & images \e[0m"
+docker rm $(docker ps -aq -f status=exited)
+docker rmi $(docker images -f "dangling=true" -q)
+
 echo -e "\e[0;36mDone! \e[0m"
 exit 0
 
