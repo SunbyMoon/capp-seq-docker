@@ -151,7 +151,7 @@ tt <- data.frame(Gene=tab$Gene,
                  AF=tab$AlleleFrequency,
                  Info=tab$Info,
                  #INTERP=NA,
-                 Interpretation=tab$rankS,
+                 Interpretation=tab$pathS,
                  AA=tab$Amino.Acid.Uq,
                  Transcript=NA,
                  Rank=tab$rank,
@@ -190,7 +190,7 @@ refpos <- function(pos) {
 }
 
 consformat <- function(con) {
-  if(nchar(con) > 20) {
+  if(!is.na(con) & nchar(con) > 20) {
     con <- paste0(substr(con, 1, 20), '..')
   } else {
     con <- con
@@ -210,14 +210,14 @@ tt$Consequence2 <- paste(tt$Consequence, '\\newline', tt$Transcript)
 
 tt$Info <- gsub(',', '\\\\newline ', tt$Info)
 
-tt$Interpretation <- gsub(',', '\\\\newline', tt$Interpretation)
+#tt$Interpretation <- gsub('VUS ', 'VUS \\\\newline ', tt$Interpretation)
 @
 
 \section*{Important Somatic Variant Results}
 
 <<strongsomatic, echo=FALSE, results='asis'>>=
   #tts <- tt[grep('Strong', tt$Status), ]
-  tts <- subset(tt, Rank>5)
+  tts <- subset(tt, Interpretation=='pathogenic' | Interpretation=='likely pathogenic')
   colnames(tts)[12] <- 'Consequence'
   if(dim(tts)[1]==0) {
     cat('No results')
@@ -244,7 +244,7 @@ tt$Interpretation <- gsub(',', '\\\\newline', tt$Interpretation)
 
 <<additionalVariants, echo=FALSE, results='asis'>>=
   #tta <- tt[-grep('Strong', tt$Status), ]
-  tta <- subset(tt, Rank<=5)
+  tta <- subset(tt, Interpretation!='pathogenic' & Interpretation!='VUS likely pathogenic')
   colnames(tta)[12] <- 'Consequence'
   if(dim(tta)[1]==0) {
     cat('No results')
@@ -323,6 +323,35 @@ tt$Interpretation <- gsub(',', '\\\\newline', tt$Interpretation)
    } else {
         Rtab <- xtable(pharmTab, align=c("l","p{1cm}","p{1cm}","p{0.75cm}","p{1cm}","p{1cm}","p{7cm}","p{1.5cm}"))
    addtorow <- list(pos = list(2:nrow(pharmTab)-1), command = "\\hdashline \n")
+   
+    print(Rtab, 
+          include.rownames=FALSE,
+          type='latex', 
+          table.placement="h!", 
+          sanitize.text.function = function(x) x,
+          caption.placement='bottom',
+          add.to.row = addtorow,
+          tabular.environment = 'longtable',
+          floating = F,
+          size="\\fontsize{8pt}{10pt}\\selectfont"
+          ) 
+   }
+  }
+@
+
+\section*{Additional Germline Findings}
+
+<<patho, echo=FALSE, results='asis'>>=
+  if(exists('pathoTab')) {
+   
+   if(dim(pathoTab)[1]==0) {
+     cat('No Results')
+   } else {
+    pathoTab$CLNDBN <- gsub('_', ' ', pathoTab$CLNDBN)
+    pathoTab$CLNDBN <- gsub('\\|', ';', pathoTab$CLNDBN)
+    colnames(pathoTab)[7] <- 'Info'
+    Rtab <- xtable(pathoTab, align=c("l","p{1cm}","p{1.5cm}","p{1.5cm}","p{1cm}","p{1cm}","p{1cm}","p{6.25cm}"))
+    addtorow <- list(pos = list(2:nrow(pathoTab)-1), command = "\\hdashline \n")
    
     print(Rtab, 
           include.rownames=FALSE,

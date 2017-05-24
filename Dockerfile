@@ -115,7 +115,8 @@ RUN echo "local({r <- getOption('repos'); r['CRAN'] <- 'https://cran.cnr.berkele
 RUN Rscript -e 'source("http://bioconductor.org/biocLite.R")' \ 
   -e 'biocLite("Rsamtools")' \
   -e 'biocLite("VariantAnnotation")' \
-  -e 'biocLite("GenomicRanges")'
+  -e 'biocLite("GenomicRanges")' \
+  -e 'biocLite("myvariant")'
 RUN Rscript -e 'install.packages("plyr")'
 RUN Rscript -e "install.packages('optparse')"
 RUN Rscript -e 'install.packages("dplyr")'
@@ -127,14 +128,18 @@ RUN Rscript -e 'install.packages("yaml")'
 RUN Rscript -e 'install.packages("xtable")'
 RUN Rscript -e 'install.packages("XML")'
 
-# install CNVkit (latest version)
-RUN pip install --upgrade pip && pip install cnvkit
+# install CNVkit-0.8.5
+RUN pip install --upgrade pip && pip install cnvkit==0.8.5
 
-# install VarDict (latest version)
+# install VarDict-1.5.1
 RUN  cd /opt/software/ && \
-  git clone --recursive https://github.com/AstraZeneca-NGS/VarDictJava.git && \
-  cd VarDictJava/ && \
-  ./gradlew clean installApp
+  wget https://github.com/AstraZeneca-NGS/VarDictJava/releases/download/v1.5.1/VarDict-1.5.1.tar && \
+  tar -xvf VarDict-1.5.1.tar && \
+  rm /opt/software/VarDict-1.5.1.tar
+
+#  git clone --recursive https://github.com/AstraZeneca-NGS/VarDictJava.git && \
+#  cd VarDictJava/ && \
+#  ./gradlew clean installApp
 
 # install FastQC-0.11.5
 RUN  cd /opt/software/ && \
@@ -158,7 +163,18 @@ RUN cd /opt/software/ && \
   tar -xvzf BBMap_36.32.tar.gz && \
   rm /opt/software/BBMap_36.32.tar.gz
 
-ENV PATH=$PATH:/opt/software:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDictJava/build/install/VarDict/bin/:/opt/software/VarDictJava:/opt/software/FastQC:/opt/software/qualimap_v2.2:/home
+# install VarScan
+#RUN cd /opt/software/ && \
+#  git clone https://github.com/dkoboldt/varscan.git 
+
+# install Docker
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates software-properties-common
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+RUN apt-get update && apt-get install -y docker-ce
+
+# set environmental variables
+ENV PATH=$PATH:/opt/software:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDict-1.5.1/bin:/opt/software/FastQC:/opt/software/qualimap_v2.2:/home
 
 # Add scripts and files to image
 ADD arep.R /home/
@@ -168,9 +184,9 @@ ADD contPanel.csv /home/
 ADD cnvkit_filter.R /home/
 ADD PANCeq_CNV_capture_targets_6.bed /home/
 ADD PANCeq_C200X50bp_6.bed /home/
-ADD table_annovar.pl /home/
-ADD annotate_variation.pl /home/
-ADD convert2annovar.pl /home/
+#ADD table_annovar.pl /home/
+#ADD annotate_variation.pl /home/
+#ADD convert2annovar.pl /home/
 ADD variant_filter.R /home/
 ADD clinical_ann_metadata-snvs_canc.csv /home/
 ADD createQCreport.R /home/
@@ -180,6 +196,9 @@ ADD longest_isoform.R /home/
 ADD BaseSpaceRunInfo.R /home/
 ADD cancer_genes.csv /home/
 ADD avera_letter.pdf /home/
+ADD GAVIN_ruleguide_r0.3.tsv /home/
+ADD hg19.dac.bed /home/
+ADD hg19.duke.bed /home/
 
 ##################### INSTALLATION END ##########################
 

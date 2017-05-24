@@ -6,6 +6,13 @@ gsample=$2 #CCD333-B-DNA
 fastq=$3 #/data/s3/averafastq/patients/CCD333
 out=$4 #/data/storage/capp-seq/patients/CCD333
 repo=$5 #/home/anu/capp-seq-docker
+bed=$6 #/data/database/avera/PANCeq_C200X50bp_6.bed
+cnvbed=$7 #/data/database/avera/PANCeq_CNV_capture_targets_6.bed
+genome=$8 #/data/database/Homo_sapiens/UCSC/hg19/Sequence/BWAIndex/genome.fa
+anno=$9 #/home/anu/capp-seq-docker
+annodb=$10 #/data/database/annovar
+oncodb=$11 #/data/database/avera/oncotator_v1_ds_April052016
+temp=$12 #/tmp
 
 #Variables
 sample=${tsample%%-*}
@@ -32,11 +39,22 @@ echo "sample="${tsample%%-*} >> $envlist
 echo "id_tumor="$id_tumor >> $envlist
 echo "id_blood="$id_blood >> $envlist 
 echo "cpu="$(grep -c "processor" /proc/cpuinfo) >> $envlist
-echo "bwa_index=/data/database/Homo_sapiens/UCSC/hg19/Sequence/BWAIndex/genome.fa" >> $envlist
-echo "temp_dir=/tmp" >> $envlist
-echo "regions=/data/database/avera/PANCeq_C200X50bp_6.bed" >> $envlist #image
-echo "annodb=/data/database/annovar" >> $envlist
-echo -e "\n" >> $envlist 
+echo -e "\n" >> $envlist
+
+echo "regions="$bed >> $envlist
+echo "cnvregions="$cnvbed >> $envlist
+echo "bwa_index="$genome >> $envlsit
+echo "anno="$anno >> $envlist
+echo "annodb="$annodb >> $envlist
+echo "oncodb="$oncodb >> $envlist
+echo "temp_dir="$temp >> $envlist
+echo -e "\n" >> $envlist
+
+#echo "bwa_index=/data/database/Homo_sapiens/UCSC/hg19/Sequence/BWAIndex/genome.fa" >> $envlist
+#echo "temp_dir=/tmp" >> $envlist
+#echo "regions=/data/database/avera/PANCeq_C200X50bp_6.bed" >> $envlist #image
+#echo "regions=/data/database/avera/MedExome_hg19_capture_targets_noann.bed" >> $envlist
+#echo "annodb=/data/database/annovar" >> $envlist
 
 echo "tinfastq1="$fastq"/"$tsample"_1.fastq.gz" >> $envlist
 echo "tinfastq2="$fastq"/"$tsample"_2.fastq.gz" >> $envlist
@@ -78,9 +96,13 @@ echo -e "\n" >> $envlist
 
 echo "outvardict="$out"/vcf/"$sample"_vardict_somatic.vcf" >> $envlist
 echo "outvardictgz="$out"/vcf/"$sample"_vardict_somatic.vcf.gz" >> $envlist
+
 echo "annovarout="$out"/vcf/"$sample"_vardict_somatic.annovar" >> $envlist
 echo "annovcf="$out"/vcf/"$sample"_vardict_somatic.annovar.hg19_multianno.vcf" >> $envlist
 echo "filtvcf="$out"/vcf/"$sample"_somatic_postfilter.vcf" >> $envlist
+
+echo "oncoout="$out"/vcf/"$sample"_vardict_somatic.oncotator.vcf" >> $envlist
+echo "oncooutgz="$out"/vcf/"$sample"_vardict_somatic.oncotator.vcf.gz" >> $envlist
 echo -e "\n" >> $envlist
 
 echo "refcnvkit="$out"/cnv/"$sample"_ref.cnn" >> $envlist
