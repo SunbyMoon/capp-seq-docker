@@ -38,9 +38,11 @@ option_list = list(
   make_option(c("-v", "--vcf"), type="character", default=NULL, 
               help="annovar annoted filtered somatic vardict vcf file", metavar="character"),
   make_option(c("-r", "--raw"), type="character", default=NULL, 
-              help="annovar annoted vardict vcf file", metavar="character"),
+              help="annovar annoted raw vardict vcf file", metavar="character"),
   make_option(c("-C", "--cnv"), type="character", default=NULL, 
               help="cnfkit output", metavar="character"),
+  make_option(c("-T", "--tmb"), type="character", default=NULL, 
+              help="tmb count text file", metavar="character"),
   make_option(c("-i", "--id"), type="character", default=NULL, 
               help="patient ID", metavar="character"),
   make_option(c("-sc", "--sample_config"), type="character", default=NULL, 
@@ -77,6 +79,9 @@ cg <- read.csv2('cancer_genes.csv', sep='\t', stringsAsFactors = F)
 
 #isoforms
 li <- read.csv2('longest_resfseq.txt', sep = ' ', stringsAsFactors = F)
+
+#tumor mutational burden
+tmb <- read.csv2(opt$tmb, dec = '.')$x
 
 # rando string fucntion
 # code from https://ryouready.wordpress.com/2008/12/18/generate-random-string-name/

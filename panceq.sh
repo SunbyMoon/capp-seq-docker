@@ -76,7 +76,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -x 2000 -c 1 -S 2 -E 3 -g 4 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_somatic.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c '/opt/software/VarDictJava/build/install/VarDict/bin/VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -x 2000 -c 1 -S 2 -E 3 -g 4 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_paired.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
 
 echo -e "\e[0;36mCreating compressed VCF\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bgzip -f $outvardict'
@@ -94,7 +94,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Filter variants
 echo -e "\e[0;36mFiltering variants\e[0m"
-docker run -v /data:/data -v /tmp:/tmp  -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/variant_filter.R $annovcf $filtvcf'
+docker run -v /data:/data -v /tmp:/tmp  -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/variant_filter.R $annovcf $filtvcf $repo'
 
 # Run contamination check script
 echo -e "\e[0;36mRunning contamination check \e[0m"

@@ -65,6 +65,7 @@ RUN cd /opt/software/ && \
 
 # install samtools-1.3
 RUN cd /opt/software/ && \
+
   wget https://github.com/samtools/samtools/releases/download/1.3/samtools-1.3.tar.bz2 && \
   tar -xvjf /opt/software/samtools-1.3.tar.bz2 && \
   cd /opt/software/samtools-1.3 && \
@@ -133,13 +134,10 @@ RUN pip install --upgrade pip && pip install cnvkit==0.8.5
 
 # install VarDict-1.5.1
 RUN  cd /opt/software/ && \
-  wget https://github.com/AstraZeneca-NGS/VarDictJava/releases/download/v1.5.1/VarDict-1.5.1.tar && \
-  tar -xvf VarDict-1.5.1.tar && \
-  rm /opt/software/VarDict-1.5.1.tar
-
-#  git clone --recursive https://github.com/AstraZeneca-NGS/VarDictJava.git && \
-#  cd VarDictJava/ && \
-#  ./gradlew clean installApp
+  git clone --recursive https://github.com/AstraZeneca-NGS/VarDictJava.git && \
+  cd VarDictJava/ && \
+  git checkout v1.5.1 -b v1.5.1 && \
+  ./gradlew clean installApp
 
 # install FastQC-0.11.5
 RUN  cd /opt/software/ && \

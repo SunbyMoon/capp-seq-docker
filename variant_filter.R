@@ -2,21 +2,22 @@ library(VariantAnnotation)
 library(GenomicRanges)
 
 args <- commandArgs(TRUE)
-infile = args[1] 
-outfile = args[2]
-scriptdir = args[3]
+infile = args[1] # Annovar VCF
+outfile = args[2] # Output VCF
+outfile2 = args[3] #TMB outfile
+scriptdir = args[4] # Repo filepath
 
 setwd(scriptdir)
 
 vcfFile <- infile
 vcf <- readVcf(vcfFile, 'hg19')
-vcf <- vcf[fixed(vcf)$FILTER=='PASS' | fixed(vcf)$FILTER=='Cluster75bp']
+vcf <- vcf[fixed(vcf)$FILTER=='PASS']
 
 # remove germline
 vcf <- vcf[info(vcf)$STATUS!='Germline']
 
 # only Somatic
-vcf <- vcf[info(vcf)$STATUS=='StrongSomatic' | info(vcf)$STATUS=='LikelySomatic']
+vcf <- vcf[info(vcf)$STATUS=='StrongSomatic' | info(vcf)$STATUS=='LikelySomatic' | info(vcf)$STATUS=='Cluster75bp']
 
 # remove strand bias
 vcf <- vcf[geno(vcf)$SBF[,1] > 0.06]
@@ -83,6 +84,15 @@ duke <- bedToGranges('hg19.duke.bed')
 keep <- which(countOverlaps(granges(vcf), dac)==0 & countOverlaps(granges(vcf), duke)==0)
 vcf <- vcf[keep]
 
+PANCeqTMB <- function(nmuts) {
+  bed <- read.csv2('PANCeq_C200X50bp_6.bed', sep='\t', header = F)
+  panelSize <- sum(bed$V3 - bed$V2) / 1000000
+  tmb <- nmuts / panelSize
+}
+
+# conpute tmb
+#tmb <- round(PANCeqTMB(dim(vcf)[1]),1)
+
 # annotation based filtering
 # only exonic regions
 vcf <- vcf[unlist(info(vcf)$Func.refGene)=='exonic' | unlist(info(vcf)$Func.refGene)=='splicing']
@@ -98,4 +108,7 @@ vcf <- vcf[unlist(info(vcf)$ExonicFunc.refGene=='frameshift_deletion' |
                     info(vcf)$ExonicFunc.refGene=='stopgain' |
                     info(vcf)$ExonicFunc.refGene=='stoploss')]
 
+tmb <- round(PANCeqTMB(dim(vcf)[1]),1)
+
 writeVcf(vcf, outfile)
+write.csv(tmb, outfile2, row.names = F, quote = F)
