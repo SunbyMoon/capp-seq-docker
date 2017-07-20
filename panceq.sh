@@ -84,7 +84,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Annotate VarDict VCF with Annovar
 echo -e "\e[0;36mAnnotating variants with Annovar\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl $anno/table_annovar.pl $outvardictgz $annodb -buildver hg19 -out $annovarout -protocol refGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
+docker run -v /home:/home -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl $anno/table_annovar.pl $outvardictgz $annodb -buildver hg19 -out $annovarout -protocol refGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
 
 # Annotate VarDict VCF with Oncotator
 echo -e "\e[0;36mAnnotating variants with Oncotator\e[0m"
@@ -94,7 +94,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Filter variants
 echo -e "\e[0;36mFiltering variants\e[0m"
-docker run -v /data:/data -v /tmp:/tmp  -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/variant_filter.R $annovcf $filtvcf $repo'
+docker run -v /data:/data -v /tmp:/tmp  -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/variant_filter.R $annovcf $filtvcf /home'
 
 # Run contamination check script
 echo -e "\e[0;36mRunning contamination check \e[0m"

@@ -4,7 +4,7 @@ docker pull anu9109/capp-seq
 
 # Run VarDict
 echo -e "\e[0;36mCalling variants with VarDict\e[0m"
-docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c '/opt/software/VarDictJava/build/install/VarDict/bin/VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -x 2000 -c 1 -S 2 -E 3 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_paired.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c '/opt/software/VarDictJava/build/install/VarDict/bin/VarDict -th $cpu -Q 10 -q 20 -G $bwa_index -f 0.01 -t -N $sample -b "$toutbam|$goutbam" -x 2000 -c 1 -S 2 -E 3 -g 4 $regions | /opt/software/VarDictJava/VarDict/testsomatic.R | /opt/software/VarDictJava/VarDict/var2vcf_paired.pl -N "$tsample|$gsample" -f 0.01 -P 0.9 -m 4.25 > $outvardict'
 
 echo -e "\e[0;36mCreating compressed VCF\e[0m"
 docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'bgzip -f $outvardict'
@@ -12,7 +12,7 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Annotate VarDict VCF with Annovar
 echo -e "\e[0;36mAnnotating variants with Annovar\e[0m"
-docker run -v /home/anu:/home/anu -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl $anno/table_annovar.pl $outvardictgz $annodb -buildver hg19 -out $annovarout -protocol refGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
+docker run -v /home:/home -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'perl $anno/table_annovar.pl $outvardictgz $annodb -buildver hg19 -out $annovarout -protocol refGene,cosmic70,clinvar_20160302,icgc21,nci60,exac03,snp142,1000g2015aug_all,ljb26_all -operation g,f,f,f,f,f,f,f,f -nastring . -vcfinput --thread $cpu'
 
 # Annotate VarDict VCF with Oncotator
 echo -e "\e[0;36mAnnotating variants with Oncotator\e[0m"
@@ -22,19 +22,19 @@ docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/e
 
 # Filter variants
 echo -e "\e[0;36mFiltering variants\e[0m"
-docker run -v /data:/data -v /tmp:/tmp  -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/variant_filter.R $annovcf $filtvcf'
+docker run -v /data:/data -v /tmp:/tmp  -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/variant_filter.R $annovcf $filtvcf /home'
 
 # Run contamination check script
-#echo -e "\e[0;36mRunning contamination check \e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/cont.R -t $toutbam -g $goutbam -n $sample  -p /home/contPanel.csv -o $contout'
+echo -e "\e[0;36mRunning contamination check \e[0m"
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/cont.R -t $toutbam -g $goutbam -n $sample  -p /home/contPanel.csv -o $contout'
 
 # Run CNVkit
-#echo -e "\e[0;36mRunning CNVkit \e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam --targets $cnvregions --fasta $bwa_index --split --output-reference $refcnvkit --output-dir $cnv_dir --scatter'
+echo -e "\e[0;36mRunning CNVkit \e[0m"
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'cnvkit.py batch -p 0 $toutbam --normal $goutbam --targets $cnvregions --fasta $bwa_index --split --output-reference $refcnvkit --output-dir $cnv_dir --scatter'
 
 # Run CNVkit filter
-#echo -e "\e[0;36mFiltering CNVkit results \e[0m"
-#docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/cnvkit_filter.R $sample $cnvkitcns $cnvkitout'
+echo -e "\e[0;36mFiltering CNVkit results \e[0m"
+docker run -v /data:/data -v /tmp:/tmp -i --env-file /home/anu/capp-seq-docker/env.list anu9109/capp-seq bash -c 'Rscript /home/cnvkit_filter.R $sample $cnvkitcns $cnvkitout'
 
 # Generate patient report
 echo -e "\e[0;36mCreating patient report \e[0m"
