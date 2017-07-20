@@ -171,6 +171,13 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
 RUN apt-get update && apt-get install -y docker-ce
 
+# install Picard
+RUN cd /opt/software/ && \ 
+  git clone https://github.com/broadinstitute/picard.git && \
+  cd /opt/software/picard/ && \
+  git checkout 2.10.3 -b 2.10.3 && \
+  ./gradlew shadowJar
+
 # set environmental variables
 ENV PATH=$PATH:/opt/software:/opt/software/vcflib/bin:/opt/software/samblaster:/opt/software/samtools-1.3/htslib-1.3:/opt/software/VarDict-1.5.1/bin:/opt/software/FastQC:/opt/software/qualimap_v2.2:/home
 
