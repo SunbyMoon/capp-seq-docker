@@ -17,7 +17,7 @@ vcf <- vcf[fixed(vcf)$FILTER=='PASS']
 vcf <- vcf[info(vcf)$STATUS!='Germline']
 
 # only Somatic
-vcf <- vcf[info(vcf)$STATUS=='StrongSomatic' | info(vcf)$STATUS=='LikelySomatic' | info(vcf)$STATUS=='Cluster75bp']
+vcf <- vcf[info(vcf)$STATUS=='StrongSomatic' | info(vcf)$STATUS=='LikelySomatic' | info(vcf)$STATUS=='Cluster75bp' | info(vcf)$STATUS=='Cluster0bp']
 
 # remove strand bias
 vcf <- vcf[geno(vcf)$SBF[,1] > 0.06]

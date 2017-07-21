@@ -171,7 +171,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
 RUN apt-get update && apt-get install -y docker-ce
 
-# install Picard
+# install Picard-2.10.3
 RUN cd /opt/software/ && \ 
   git clone https://github.com/broadinstitute/picard.git && \
   cd /opt/software/picard/ && \
