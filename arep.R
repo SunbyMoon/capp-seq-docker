@@ -289,12 +289,12 @@ tab <- cbind(tab, g)
 
 #pathogenecity
 gav <- ifelse(tab$GARVIN_PRED=='pathogenic', 'PATHOGENIC', ifelse(tab$GARVIN_PRED=='benign', 'BENIGN', NA))
-#gav[is.na(gav)] <- 'VUS'
+gav[is.na(gav)] <- 'VUS'
 clin <- ifelse(grepl('Pathogenic', tab$CLINSIG), 'PATHOGENIC', ifelse(grepl('Benign', tab$CLINSIG), 'BENIGN', NA))
 path <- cbind(gav,as.vector(tab$GARVING_CAT_C),clin)
 
 pathS <- apply(path, 1, function(x) {
-  if(is.na(x[1]) & is.na(x[3])) {
+  if((is.na(x[1]) & is.na(x[3])) | x[1]=='VUS' & is.na(x[3])) {
     'VUS'
   } else if(is.na(x[1]) & !is.na(x[3])) {
     if(is.na(x[1]) & x[3]=='BENIGN') {
@@ -352,7 +352,7 @@ known <- ifelse(tab$ICGC!='.' | tab$COSMIC!='.', 1, 0)
 rank <- apply(cbind(pred,info,exac,known), 1, sum, na.rm=T)
 
 tab <- cbind(tab, rank, pathS)
-tab <- arrange(tab, pathS, rank, Gene, decreasing=T)
+#tab <- arrange(tab, pathS, rank, Gene, desc=T)
 
 # read in CNV data
 if(any(names(opt)=='cnv')) {

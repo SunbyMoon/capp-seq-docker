@@ -8,6 +8,7 @@ outfile2 = args[3] #TMB outfile
 scriptdir = args[4] # Repo filepath
 
 setwd(scriptdir)
+#setwd("/home")
 
 vcfFile <- infile
 vcf <- readVcf(vcfFile, 'hg19')
